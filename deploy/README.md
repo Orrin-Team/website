@@ -56,7 +56,10 @@ not a shell, not a tunnel, not the rest of the machine.
 
 ### 3. nginx
 
+Two files — the vhost, and a snippet of shared response headers it includes:
+
 ```bash
+cp deploy/nginx/orrin-headers.conf /etc/nginx/snippets/orrin-headers.conf
 cp deploy/nginx/orrinengine.com.conf /etc/nginx/sites-available/orrinengine.com
 ln -s /etc/nginx/sites-available/orrinengine.com /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
