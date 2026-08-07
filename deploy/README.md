@@ -69,12 +69,30 @@ box down, not just this one.
 
 DNS must already resolve to this server or issuance fails.
 
+Use `certonly`, **not** `--nginx`:
+
 ```bash
-certbot --nginx -d orrinengine.com -d www.orrinengine.com
+certbot certonly --webroot -w /var/www/orrin \
+    -d orrinengine.com -d www.orrinengine.com
 ```
 
-certbot edits the config in place to add the TLS listener and an HTTP→HTTPS
-redirect. Renewal is automatic via its systemd timer.
+`certbot --nginx` picks a server block to patch, and if this site's config
+isn't loaded when it runs, it patches the *default* block instead — attaching
+this domain and certificate to `/var/www/html`. The result looks like it
+worked (valid cert, working redirect) while serving the nginx welcome page.
+
+`certonly` just issues the certificate and touches no config. The TLS
+directives live in `nginx/orrinengine.com.conf` under version control, where
+they can be reviewed and rolled back.
+
+Reload nginx to pick up the new certificate:
+
+```bash
+nginx -t && systemctl reload nginx
+```
+
+Renewal is automatic via certbot's systemd timer. Check it with
+`systemctl list-timers | grep certbot`.
 
 ## GitHub configuration
 
