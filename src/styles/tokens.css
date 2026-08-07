@@ -39,7 +39,10 @@
   --color-brand-navy: oklch(17.6% 0.031 257); /* #08111e — banner, right edge */
 
   /* ---- Type ------------------------------------------------------------ */
-  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  /* Geist carries both display and body. With one family doing both jobs, the
+     hierarchy rests entirely on weight — body sits at 350 and display at 800,
+     a 450-unit gap, so headings still read as headings. */
+  --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
