@@ -1,0 +1,53 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="Page not found — Orrin Engine"
+  description="That page doesn't exist. The engine is pre-release and pages move; here's where to go instead."
+>
+  <div class="shell shell--narrow">
+    <header class="page-head">
+      <h1>That page doesn't exist.</h1>
+      <p>
+        The site changes as the engine does, so a link may have moved or been
+        renamed. Here's everything there is.
+      </p>
+    </header>
+
+    <nav class="posts" aria-label="Site">
+      <article class="post-row">
+        <span class="post-row__date mono">01</span>
+        <a href="/docs/getting-started/">
+          <h2>Documentation</h2>
+          <p>Build from source, run the demo, scaffold a project, write C#.</p>
+        </a>
+      </article>
+      <article class="post-row">
+        <span class="post-row__date mono">02</span>
+        <a href="/roadmap/">
+          <h2>Roadmap</h2>
+          <p>Nine phases — what has shipped and what is still open.</p>
+        </a>
+      </article>
+      <article class="post-row">
+        <span class="post-row__date mono">03</span>
+        <a href="/blog/">
+          <h2>Development notes</h2>
+          <p>Progress on the engine, and the reasoning behind the decisions.</p>
+        </a>
+      </article>
+      <article class="post-row">
+        <span class="post-row__date mono">04</span>
+        <a href="https://github.com/Orrin-Team/orrin" rel="noopener">
+          <h2>The repository</h2>
+          <p>Source, issue tracker and milestones.</p>
+        </a>
+      </article>
+    </nav>
+
+    <section class="closer">
+      <a class="btn btn--accent" href="/">Back to the start</a>
+    </section>
+  </div>
+</Base>
