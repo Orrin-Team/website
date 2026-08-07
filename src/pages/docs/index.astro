@@ -1,0 +1,47 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+const docs = (await getCollection("docs")).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+---
+
+<Base
+  title="Documentation — Orrin Engine"
+  description="How to build Orrin from source, run the demo, scaffold a project with the CLI, write C# scripts, and read the architecture plan."
+>
+  <div class="shell shell--narrow">
+    <header class="page-head">
+      <h1>Documentation</h1>
+      <p>
+        Orrin is pre-release. These pages cover what exists on <code
+          class="mono">master</code
+        > today and say so plainly where something is still an open issue.
+      </p>
+    </header>
+
+    <div class="posts">
+      {
+        docs.map((d) => (
+          <article class="post-row">
+            <span class="post-row__date mono">{String(d.data.order).padStart(2, "0")}</span>
+            <a href={`/docs/${d.id}/`}>
+              <h2>{d.data.title}</h2>
+              <p>{d.data.description}</p>
+            </a>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page-head code {
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-xs);
+    background: var(--color-paper-2);
+    color: var(--color-ink);
+  }
+</style>

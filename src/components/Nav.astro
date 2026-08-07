@@ -1,0 +1,124 @@
+---
+// N1b · Canonical SaaS three-section — wordmark left, 4 centre links,
+// sign-in-equivalent (GitHub) + filled CTA right. Frosts on scroll.
+const { pathname } = Astro.url;
+const links = [
+  { href: "/docs/getting-started/", label: "Docs", match: "/docs" },
+  { href: "/roadmap/", label: "Roadmap", match: "/roadmap" },
+  { href: "/blog/", label: "Blog", match: "/blog" },
+];
+const isCurrent = (match: string) => pathname.startsWith(match);
+---
+
+<header class="nav" id="nav" data-nav>
+  <div class="nav__inner">
+    <a class="nav__brand" href="/">
+      <img src="/brand/orrin-icon.png" alt="" width="26" height="26" />
+      Orrin
+    </a>
+
+    <nav class="nav__center" aria-label="Primary">
+      {
+        links.map((l) => (
+          <a
+            class="nav__link"
+            href={l.href}
+            aria-current={isCurrent(l.match) ? "page" : undefined}
+          >
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="nav__right">
+      <a
+        class="btn btn--text"
+        href="https://github.com/Orrin-Team/orrin"
+        rel="noopener">GitHub</a
+      >
+      <a class="btn btn--accent" href="/docs/getting-started/">Get started</a>
+      <button
+        class="nav__toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="nav-sheet"
+        aria-label="Open menu"
+        data-nav-toggle
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 18 18"
+          fill="none"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d="M2 5h14M2 9h14M2 13h14"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="nav__sheet" id="nav-sheet" data-nav-sheet>
+    {
+      links.map((l) => (
+        <a
+          class="nav__link"
+          href={l.href}
+          aria-current={isCurrent(l.match) ? "page" : undefined}
+        >
+          {l.label}
+        </a>
+      ))
+    }
+    <a class="nav__link" href="https://github.com/Orrin-Team/orrin" rel="noopener"
+      >GitHub</a
+    >
+    <a class="nav__link" href="https://discord.gg/sY8YBGFmRy" rel="noopener"
+      >Discord</a
+    >
+  </div>
+</header>
+
+<script>
+  const nav = document.querySelector<HTMLElement>("[data-nav]");
+  const toggle = document.querySelector<HTMLButtonElement>("[data-nav-toggle]");
+  const sheet = document.querySelector<HTMLElement>("[data-nav-sheet]");
+
+  // Frost on scroll — rAF-throttled, no scroll-linked animation.
+  let ticking = false;
+  const sync = () => {
+    nav?.classList.toggle("is-scrolled", window.scrollY > 24);
+    ticking = false;
+  };
+  addEventListener(
+    "scroll",
+    () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(sync);
+      }
+    },
+    { passive: true },
+  );
+  sync();
+
+  toggle?.addEventListener("click", () => {
+    const open = sheet?.classList.toggle("is-open") ?? false;
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  });
+
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && sheet?.classList.contains("is-open")) {
+      sheet.classList.remove("is-open");
+      toggle?.setAttribute("aria-expanded", "false");
+      toggle?.focus();
+    }
+  });
+</script>

@@ -1,0 +1,68 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+
+const fmt = (d: Date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(d);
+---
+
+<Base
+  title="Blog — Orrin Engine"
+  description="Development notes from the Orrin engine: architecture decisions, phase progress, and what changed under the hood."
+>
+  <div class="shell shell--narrow">
+    <header class="page-head">
+      <h1>Development notes</h1>
+      <p>
+        Progress on the engine, and the reasoning behind decisions that are hard
+        to reverse later.
+      </p>
+    </header>
+
+    {
+      posts.length === 0 ? (
+        <div class="empty">
+          <h2>No posts yet.</h2>
+          <p>
+            Drop a markdown file into <code class="mono">src/content/blog/</code> and
+            it shows up here.
+          </p>
+          <a class="tlink" href="/roadmap/">
+            See the roadmap instead <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      ) : (
+        <div class="posts">
+          {posts.map((p) => (
+            <article class="post-row">
+              <time class="post-row__date" datetime={p.data.date.toISOString()}>
+                {fmt(p.data.date)}
+              </time>
+              <a href={`/blog/${p.id}/`}>
+                <h2>{p.data.title}</h2>
+                <p>{p.data.description}</p>
+              </a>
+            </article>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .empty code {
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-xs);
+    background: var(--color-paper-2);
+    color: var(--color-ink);
+  }
+</style>

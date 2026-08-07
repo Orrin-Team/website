@@ -1,0 +1,13 @@
+[
+  {
+    "date": "2026-08-05",
+    "macrostructure": "Split Studio",
+    "theme": "custom",
+    "theme_axes": "dark / display-heavy / cool",
+    "vibe": "deep-space instrument, cool, precise",
+    "nav": "N1b",
+    "footer": "Ft5",
+    "enrichment": "none",
+    "brief": "Orrin Engine · open-source Rust game engine · marketing site + docs + roadmap + blog"
+  }
+]

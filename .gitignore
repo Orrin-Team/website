@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+*.log
+.env
+.env.production
+
+# Vendored design skill — ~100 files of tooling, not part of the site.
+# Restorable from skills-lock.json.
+.agents/
+
+# Machine-local editor settings (permission grants, local paths).
+.claude/settings.local.json
+
+# Symlink into .agents/ — would be dangling in a fresh clone.
+.claude/skills/

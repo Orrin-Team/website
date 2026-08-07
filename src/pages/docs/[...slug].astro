@@ -1,0 +1,64 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+export async function getStaticPaths() {
+  const docs = await getCollection("docs");
+  const sorted = docs.sort((a, b) => a.data.order - b.data.order);
+  return sorted.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: { entry, sorted, prev: sorted[i - 1], next: sorted[i + 1] },
+  }));
+}
+
+const { entry, sorted, prev, next } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Base
+  title={`${entry.data.title} — Orrin docs`}
+  description={entry.data.description}
+>
+  <div class="shell">
+    <header class="page-head">
+      <h1>{entry.data.title}</h1>
+      <p>{entry.data.description}</p>
+    </header>
+
+    <div class="docs">
+      <aside class="docs__rail">
+        <p class="docs__rail-title">Documentation</p>
+        <nav aria-label="Documentation">
+          {
+            sorted.map((d) => (
+              <a
+                href={`/docs/${d.id}/`}
+                aria-current={d.id === entry.id ? "page" : undefined}
+              >
+                {d.data.title}
+              </a>
+            ))
+          }
+        </nav>
+      </aside>
+
+      <article class="prose">
+        <Content />
+
+        <nav class="docs__foot" aria-label="Documentation pages">
+          {prev && <a class="tlink" href={`/docs/${prev.id}/`}><span aria-hidden="true">←</span> {prev.data.title}</a>}
+          {next && <a class="tlink" href={`/docs/${next.id}/`}>{next.data.title} <span aria-hidden="true">→</span></a>}
+        </nav>
+      </article>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .docs__foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-lg);
+    justify-content: space-between;
+  }
+</style>

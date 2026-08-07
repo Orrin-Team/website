@@ -1,0 +1,61 @@
+---
+// A screenshot slot.
+//
+// With no `src`, it renders a soft-edged placeholder carrying the shot's name
+// and target dimensions — never a stock photo, because no stock image can
+// stand in for a screenshot of your engine. Drop a file into `public/shots/`
+// and set `src` and the real capture takes over; nothing else changes.
+//
+// Deliberately no browser chrome, no device frame, no tilt, no border — the
+// reader already has a window, and drawing them a fake one is a tell.
+interface Props {
+  /** e.g. "/shots/editor.png". Omit to render the placeholder. */
+  src?: string;
+  /** Describes the INTENDED subject, so it stays correct after you swap. */
+  alt: string;
+  /** Names the shot. Shown in the placeholder, or under a real image. */
+  caption: string;
+  /** Target width in px — drives the aspect ratio and the placeholder hint. */
+  w: number;
+  /** Target height in px. */
+  h: number;
+  /** Set on an above-the-fold shot. Skips lazy-loading, raises priority. */
+  priority?: boolean;
+}
+const { src, alt, caption, w, h, priority = false } = Astro.props;
+---
+
+<figure class="shot">
+  {
+    src ? (
+      <img
+        class="shot__img"
+        src={src}
+        alt={alt}
+        width={w}
+        height={h}
+        loading={priority ? "eager" : "lazy"}
+        decoding={priority ? "sync" : "async"}
+        fetchpriority={priority ? "high" : "auto"}
+        style={`aspect-ratio: ${w} / ${h}`}
+      />
+    ) : (
+      /* TODO: Replace with a real screenshot — the caption names the shot,
+         and public/shots/README.md lists the target sizes. */
+      <div
+        class="shot__slot"
+        style={`aspect-ratio: ${w} / ${h}`}
+        role="img"
+        aria-label={`Screenshot placeholder — ${alt}`}
+      >
+        <div class="shot__slot-inner" aria-hidden="true">
+          <p class="shot__slot-name">{caption}</p>
+          <p class="shot__slot-hint">
+            {w} × {h} · screenshot needed
+          </p>
+        </div>
+      </div>
+    )
+  }
+  {src && <figcaption class="shot__cap">{caption}</figcaption>}
+</figure>

@@ -1,0 +1,68 @@
+---
+// Typographic code frame: label row + hairline + <pre>.
+// Deliberately NOT a re-drawn terminal window — no title bar, no traffic
+// lights. The user's terminal already is a terminal.
+interface Props {
+  label?: string;
+  lines: string[];
+  /** Lines beginning with "#" render as comments; others get a prompt. */
+  prompt?: boolean;
+}
+const { label = "bash", lines, prompt = true } = Astro.props;
+
+const copyText = lines.filter((l) => l.trim() && !l.startsWith("#")).join("\n");
+
+const rows = lines.map((line) => ({
+  text: line,
+  blank: line.trim() === "",
+  comment: line.startsWith("#"),
+}));
+
+const PROMPT = "$ ";
+const NL = "\n";
+---
+
+<div class="code">
+  <div class="code__bar">
+    <span class="code__label">{label}</span>
+    <button
+      class="code__copy"
+      type="button"
+      data-copy={copyText}
+      aria-label="Copy commands to clipboard"
+    >
+      <span data-copy-label>Copy</span>
+    </button>
+  </div>
+
+  <pre class="code__body"><code>{rows.map((row) => {
+    if (row.blank) return NL;
+    if (row.comment) return <span class="code__comment">{row.text + NL}</span>;
+    // Single-line JSX on purpose: inside <pre>, source newlines are content.
+    return <span>{prompt ? <span class="code__prompt">{PROMPT}</span> : null}{row.text + NL}</span>;
+  })}</code></pre>
+</div>
+
+<script>
+  // Copy-to-clipboard: the label swap IS the feedback. No toast.
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
+    const label = btn.querySelector<HTMLElement>("[data-copy-label]");
+    const original = label?.textContent ?? "Copy";
+    let timer: number | undefined;
+
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copy ?? "");
+        btn.dataset.state = "copied";
+        if (label) label.textContent = "Copied";
+      } catch {
+        if (label) label.textContent = "Copy failed";
+      }
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        delete btn.dataset.state;
+        if (label) label.textContent = original;
+      }, 2500);
+    });
+  });
+</script>

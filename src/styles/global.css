@@ -1,0 +1,1334 @@
+/* Hallmark · pre-emit critique: P5 H4 E4 S5 R4 V5
+ * Hallmark · genre: atmospheric · macrostructure: Split Studio
+ * H2 hero knobs: ratio=7/5, right=code column, divider=negative space
+ * F3 spec knobs: columns=3, rules=every row, numbers=tabular
+ * nav: N1b (centre links=4, dropdowns=0, scroll=frost-on-scroll)
+ * footer: Ft5 Statement (width=38ch, wordmark=under sentence, rule=hairline)
+ * theme: custom · vibe: "deep-space instrument, cool, precise"
+ * paper: oklch(13% 0.020 235) · accent: oklch(80% 0.128 200)
+ * display: Bricolage Grotesque · body: Geist · outlier: JetBrains Mono (machine text)
+ * axes: dark / display-heavy / cool
+ * enrichment: typography + supplied brand mark + 3 labelled screenshot slots
+ *   (no stock imagery — a screenshot of the engine can only come from the user)
+ * contrast: pass (40–41) · nav: N1b · footer: Ft5 · slop: pass (42–45)
+ * honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (49)
+ * icons: pass (30) · mobile: pass (34, 49, 50–57)
+ * studied: no · context: user-provided (audience/use/tone/stack) · v1.1.0
+ */
+
+@import "./tokens.css";
+
+/* ========================================================================
+   Base
+   ===================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: clip;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: clip;
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 350;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: var(--space-md);
+  inset-block-start: -100%;
+  z-index: var(--z-toast);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+.skip-link:focus-visible {
+  inset-block-start: var(--space-md);
+}
+
+/* ========================================================================
+   Layout primitives
+   ===================================================================== */
+
+.shell {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+.shell--narrow {
+  max-width: 62rem;
+}
+
+.stack {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.02em;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+.lede {
+  font-size: var(--text-md);
+  line-height: 1.55;
+  color: var(--color-ink-2);
+  max-width: 46ch;
+}
+
+.rule {
+  height: var(--rule-hair);
+  background: var(--color-rule);
+  border: 0;
+  margin: 0;
+}
+
+/* Section head — S2 Hanging. Single column always; heading directly under
+   nothing (no eyebrow). Gate 52 / 54 safe. */
+.head-hang {
+  display: grid;
+  gap: var(--space-md);
+  padding-block: var(--space-3xl) var(--space-xl);
+  max-width: 34ch;
+}
+.head-hang h2 {
+  font-size: var(--text-2xl);
+}
+.head-hang p {
+  color: var(--color-muted);
+  max-width: 46ch;
+}
+
+/* ========================================================================
+   Buttons — 8 states
+   ===================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  border: var(--rule-hair) solid transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out),
+    transform 100ms var(--ease-out);
+}
+
+.btn--accent {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+.btn--accent:hover {
+  background: var(--color-accent-2);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-ink);
+  border-color: var(--color-rule);
+}
+/* One signal per hover — the outline brightens, nothing else moves. */
+.btn--ghost:hover {
+  border-color: var(--color-ink);
+}
+
+.btn--text {
+  background: transparent;
+  color: var(--color-ink-2);
+  padding-inline: var(--space-sm);
+}
+.btn--text:hover {
+  color: var(--color-ink);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* C3 typographic link CTA — underline solid, thickens on hover, arrow → */
+.tlink {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  white-space: nowrap;
+  color: var(--color-accent);
+  font-weight: 500;
+  padding-block-end: 2px;
+  border-block-end: 1px solid var(--color-accent-2);
+  transition:
+    border-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
+}
+.tlink:hover {
+  color: var(--color-ink);
+  border-block-end-color: var(--color-ink);
+}
+.tlink:active {
+  transform: translateY(1px);
+}
+
+/* Prose links */
+.prose a:not(.btn):not(.tlink) {
+  color: var(--color-accent);
+  border-block-end: 1px solid var(--color-rule);
+  transition: border-color var(--dur-short) var(--ease-out);
+}
+.prose a:not(.btn):not(.tlink):hover {
+  border-block-end-color: var(--color-accent);
+}
+
+/* ========================================================================
+   Nav — N1b canonical three-section
+   ===================================================================== */
+
+.nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: var(--z-sticky);
+  background: transparent;
+  border-block-end: var(--rule-hair) solid transparent;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+}
+.nav.is-scrolled {
+  background: color-mix(in oklch, var(--color-paper) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+  border-block-end-color: var(--color-rule);
+}
+
+.nav__inner {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.nav__brand {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-md);
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+.nav__brand img {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+}
+
+.nav__center {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.nav__link {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  transition: color var(--dur-short) var(--ease-out);
+}
+.nav__link:hover {
+  color: var(--color-ink);
+}
+.nav__link:active {
+  color: var(--color-accent-2);
+}
+.nav__link[aria-current="page"] {
+  color: var(--color-accent);
+}
+
+.nav__right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.nav__toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: border-color var(--dur-short) var(--ease-out);
+}
+.nav__toggle:hover {
+  border-color: var(--color-ink);
+}
+.nav__toggle:active {
+  transform: translateY(1px);
+}
+.nav__toggle[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.nav__sheet {
+  display: none;
+  padding: var(--space-md) var(--page-gutter) var(--space-lg);
+  border-block-start: var(--rule-hair) solid var(--color-rule);
+  background: var(--color-paper);
+}
+.nav__sheet.is-open {
+  display: grid;
+  gap: var(--space-2xs);
+}
+.nav__sheet .nav__link {
+  padding: var(--space-sm) 0;
+  font-size: var(--text-base);
+}
+
+@media (max-width: 60rem) {
+  /* Centre cluster is gone — collapse the three-up grid to two so the brand
+     and the action cluster can't overlap. */
+  .nav__inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-sm);
+  }
+  .nav__center {
+    display: none;
+  }
+  .nav__toggle {
+    display: inline-flex;
+  }
+  .nav__right .btn--text {
+    display: none;
+  }
+}
+
+@media (max-width: 26rem) {
+  /* Shorten the label rather than let it crowd the toggle. */
+  .nav__right .btn--accent {
+    padding-inline: var(--space-md);
+  }
+}
+
+/* ========================================================================
+   Hero — H2 Split Diptych, 7/5, code column right
+   ===================================================================== */
+
+/* Bottom padding is 1.5× the top (the 68px is the fixed nav's offset, not
+   breathing room) so the hero settles into the page rather than floating. */
+.hero {
+  padding-block: calc(68px + var(--space-3xl)) var(--space-4xl);
+}
+
+.hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2xl);
+  align-items: center;
+}
+
+@media (min-width: 62rem) {
+  .hero__grid {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--space-3xl);
+  }
+}
+
+.hero__title {
+  font-size: var(--text-display);
+  max-width: 13ch;
+}
+
+.hero__lede {
+  margin-block-start: var(--space-lg);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-xl);
+}
+
+/* A real list — the accent dot is its marker, not an ornament. */
+.hero__meta {
+  list-style: none;
+  margin: var(--space-xl) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  color: var(--color-muted);
+}
+.hero__meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+}
+.hero__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  flex: none;
+}
+
+/* ========================================================================
+   Code block — typographic frame, no re-drawn window chrome
+   ===================================================================== */
+
+.code {
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-2);
+  overflow: hidden;
+}
+
+.code__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-md);
+  border-block-end: var(--rule-hair) solid var(--color-rule);
+}
+
+.code__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.code__copy {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding-inline: var(--space-sm);
+  background: transparent;
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+}
+.code__copy:hover {
+  color: var(--color-ink);
+  border-color: var(--color-muted);
+}
+.code__copy:active {
+  transform: translateY(1px);
+}
+.code__copy[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.code__copy[data-state="copied"] {
+  color: var(--color-accent);
+  border-color: var(--color-accent-2);
+}
+
+.code__body {
+  margin: 0;
+  padding: var(--space-md);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: var(--color-ink-2);
+  -webkit-overflow-scrolling: touch;
+}
+.code__body code {
+  font-family: inherit;
+}
+.code__prompt {
+  color: var(--color-accent);
+  user-select: none;
+}
+.code__comment {
+  color: var(--color-neutral);
+}
+
+/* Markdown-rendered code (Shiki). Shiki emits no font-family, so without
+   this the <pre> falls back to the UA monospace — a fourth family. */
+.prose pre,
+.prose pre code {
+  font-family: var(--font-mono);
+}
+.prose pre {
+  padding: var(--space-md);
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+.prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-xs);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+}
+
+/* ========================================================================
+   Split Studio — alternating diptychs
+   ===================================================================== */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xl);
+  padding-block: var(--space-2xl);
+  border-block-start: var(--rule-hair) solid var(--color-rule-2);
+}
+
+@media (min-width: 62rem) {
+  .split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-3xl);
+    padding-block: var(--space-3xl);
+    align-items: start;
+  }
+  /* Alternate direction: even rows put the proof column on the left. */
+  .split--flip .split__text {
+    order: 2;
+  }
+  .split--flip .split__proof {
+    order: 1;
+  }
+}
+
+.split__text h2 {
+  font-size: var(--text-xl);
+  max-width: 16ch;
+}
+.split__text p {
+  margin-block-start: var(--space-md);
+  color: var(--color-ink-2);
+  max-width: 48ch;
+}
+.split__text .tlink {
+  margin-block-start: var(--space-lg);
+}
+
+.split__proof {
+  display: grid;
+  gap: var(--space-sm);
+  align-content: start;
+}
+
+/* Provenance line under a proof figure — where the claim is tracked. */
+.split__note {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  max-width: 48ch;
+}
+
+/* Proof row — hairline list, no cards, no icons */
+.proof-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2xs);
+  padding-block: var(--space-md);
+  border-block-start: var(--rule-hair) solid var(--color-rule-2);
+}
+.proof-row:first-child {
+  border-block-start: 0;
+  padding-block-start: 0;
+}
+/* Editorial label, not machine text — stays on the body face. The mono
+   outlier is reserved for identifiers, commands and numerals. */
+.proof-row__k {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.proof-row__v {
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+.tag--live {
+  color: var(--color-accent);
+  border-color: var(--color-accent-2);
+}
+
+/* ========================================================================
+   F3 Tabular spec sheet
+   ===================================================================== */
+
+.spec {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  text-align: start;
+}
+.spec caption {
+  text-align: start;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  padding-block-end: var(--space-md);
+}
+.spec th,
+.spec td {
+  padding: var(--space-md) var(--space-md) var(--space-md) 0;
+  border-block-start: var(--rule-hair) solid var(--color-rule-2);
+  vertical-align: baseline;
+  text-align: start;
+  font-weight: 400;
+}
+.spec thead th {
+  border-block-start: 0;
+  padding-block: 0 var(--space-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.spec tbody th {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.spec td {
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+.spec td:last-child,
+.spec th:last-child {
+  padding-inline-end: 0;
+}
+
+.spec-scroll {
+  overflow-x: auto;
+}
+
+@media (max-width: 46rem) {
+  .spec,
+  .spec tbody,
+  .spec tr,
+  .spec th,
+  .spec td {
+    display: block;
+    width: 100%;
+  }
+  .spec thead {
+    display: none;
+  }
+  .spec tr {
+    padding-block: var(--space-md);
+    border-block-start: var(--rule-hair) solid var(--color-rule-2);
+  }
+  .spec th,
+  .spec td {
+    border: 0;
+    padding: 0 0 var(--space-2xs);
+  }
+}
+
+/* ========================================================================
+   Screenshot slots — see components/Shot.astro
+   No browser chrome, no device frame, no tilt. A hairline figure only.
+   ===================================================================== */
+
+.shot {
+  margin: 0;
+  display: grid;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.shot__img,
+.shot__slot {
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+/* No border. A real capture is dark UI on a dark canvas — it sits in the page
+   on its own, and a hairline would only re-introduce the frame. */
+.shot__img {
+  object-fit: cover;
+  display: block;
+}
+
+/* The empty state is a soft lift in the surface, not a box. The radial falls
+   all the way back to paper before it reaches an edge, so there is no seam —
+   the slot dissolves outward instead of stopping. */
+.shot__slot {
+  display: grid;
+  place-items: center;
+  padding: var(--space-lg);
+  /* Every edge must land on paper, or a seam appears. With a centre at 50% 48%
+     and radii of 76% × 60%, the side edges sit at 50/76 = 66% along the
+     gradient and the top edge at 48/60 = 80% — so the paper stop goes at 64%,
+     just inside the nearest of them. The core holds paper-3 flat to 16% so a
+     1152 px-wide plate still reads as a reserved region rather than as empty
+     page; a pure falloff with no flat core disappears at that size. */
+  background: radial-gradient(
+    76% 60% at 50% 48%,
+    var(--color-paper-3) 0% 16%,
+    var(--color-paper-2) 42%,
+    var(--color-paper) 64%
+  );
+}
+
+/* Type sits directly on the surface — no plate, no rule. */
+.shot__slot-inner {
+  display: grid;
+  gap: var(--space-2xs);
+  justify-items: center;
+  text-align: center;
+  max-width: 100%;
+}
+
+/* Quiet on purpose. This is a temporary note to the person building the site,
+   not content — at display weight it read louder than the copy around it. */
+.shot__slot-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.shot__slot-hint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--color-neutral);
+}
+
+.shot__cap {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* Showcase — one wide plate, then an uneven pair. Never three equal cards. */
+.showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-lg);
+  padding-block-end: var(--space-2xl);
+}
+
+@media (min-width: 56rem) {
+  .showcase {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--space-xl);
+  }
+  .showcase > :first-child {
+    grid-column: 1 / -1;
+  }
+  /* With exactly two shots there is no pair to balance, so the second one
+     steps into the narrow right column instead of sitting left with a hole
+     beside it — a deliberate offset rather than a gap. A third shot restores
+     the 7/5 pair automatically. */
+  .showcase:has(> :last-child:nth-child(2)) > :nth-child(2) {
+    grid-column: 2;
+  }
+}
+
+/* ========================================================================
+   Status band
+   ===================================================================== */
+
+.status {
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  margin-block: var(--space-3xl);
+  background: var(--color-paper-2);
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-md);
+}
+@media (min-width: 52rem) {
+  .status {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: var(--space-2xl);
+    align-items: center;
+    padding: var(--space-2xl);
+  }
+}
+.status h2 {
+  font-size: var(--text-lg);
+}
+.status p {
+  color: var(--color-ink-2);
+  max-width: 52ch;
+}
+.status p + p {
+  margin-block-start: var(--space-md);
+}
+
+/* ========================================================================
+   Final CTA
+   ===================================================================== */
+
+.closer {
+  padding-block: var(--space-3xl);
+  border-block-start: var(--rule-hair) solid var(--color-rule-2);
+  display: grid;
+  gap: var(--space-lg);
+  justify-items: start;
+}
+.closer h2 {
+  font-size: var(--text-2xl);
+  max-width: 18ch;
+}
+.closer p {
+  color: var(--color-muted);
+  max-width: 48ch;
+}
+
+/* ========================================================================
+   Footer — Ft5 Statement
+   ===================================================================== */
+
+.foot {
+  padding-block: var(--space-3xl) var(--space-xl);
+  padding-inline: var(--page-gutter);
+  max-width: var(--page-max);
+  margin-inline: auto;
+}
+
+.foot__line {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.75rem, 5vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  max-width: 38ch;
+  overflow-wrap: anywhere;
+}
+
+.foot__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-block-start: var(--space-2xl);
+  padding-block-start: var(--space-md);
+  border-block-start: var(--rule-hair) solid var(--color-rule);
+}
+
+.foot__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+.foot__link {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  white-space: nowrap;
+  transition: color var(--dur-short) var(--ease-out);
+}
+.foot__link:hover {
+  color: var(--color-ink);
+}
+
+.foot__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+.foot__brand img {
+  width: 22px;
+  height: 22px;
+}
+
+/* ========================================================================
+   Page header (interior pages)
+   ===================================================================== */
+
+.page-head {
+  padding-block: calc(68px + var(--space-2xl)) var(--space-xl);
+  display: grid;
+  gap: var(--space-md);
+  border-block-end: var(--rule-hair) solid var(--color-rule-2);
+}
+.page-head h1 {
+  font-size: var(--text-3xl);
+  max-width: 16ch;
+}
+.page-head p {
+  color: var(--color-ink-2);
+  max-width: 56ch;
+  font-size: var(--text-md);
+}
+.page-head p.mono {
+  font-size: var(--text-sm);
+}
+
+/* ========================================================================
+   Prose (docs + blog body)
+   ===================================================================== */
+
+.prose {
+  max-width: var(--measure);
+  color: var(--color-ink-2);
+  line-height: 1.7;
+}
+.prose > * + * {
+  margin-block-start: var(--space-md);
+}
+.prose h2 {
+  font-size: var(--text-xl);
+  color: var(--color-ink);
+  margin-block-start: var(--space-2xl);
+}
+.prose h3 {
+  font-size: var(--text-md);
+  color: var(--color-ink);
+  margin-block-start: var(--space-xl);
+}
+.prose ul,
+.prose ol {
+  padding-inline-start: 1.2em;
+  display: grid;
+  gap: var(--space-xs);
+}
+.prose li::marker {
+  color: var(--color-neutral);
+}
+.prose blockquote {
+  margin: 0;
+  padding-inline-start: var(--space-md);
+  border-inline-start: 2px solid var(--color-accent-2);
+  color: var(--color-ink);
+}
+.prose strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.prose hr {
+  border: 0;
+  border-block-start: var(--rule-hair) solid var(--color-rule);
+  margin-block: var(--space-xl);
+}
+
+/* ========================================================================
+   Docs shell — sidebar + body
+   ===================================================================== */
+
+.docs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xl);
+  padding-block: var(--space-xl) var(--space-3xl);
+}
+@media (min-width: 62rem) {
+  .docs {
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: var(--space-3xl);
+  }
+  .docs__rail {
+    position: sticky;
+    top: calc(68px + var(--space-lg));
+    align-self: start;
+    max-height: calc(100dvh - 68px - var(--space-2xl));
+    overflow-y: auto;
+  }
+}
+
+.docs__rail nav {
+  display: grid;
+  gap: var(--space-2xs);
+}
+.docs__rail-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding-block-end: var(--space-xs);
+}
+.docs__rail a {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--color-ink-2);
+  border-inline-start: 2px solid var(--color-rule-2);
+  transition:
+    color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+}
+.docs__rail a:hover {
+  color: var(--color-ink);
+  border-inline-start-color: var(--color-muted);
+}
+.docs__rail a[aria-current="page"] {
+  color: var(--color-accent);
+  border-inline-start-color: var(--color-accent);
+}
+
+.docs__foot {
+  margin-block-start: var(--space-2xl);
+  padding-block-start: var(--space-md);
+  border-block-start: var(--rule-hair) solid var(--color-rule);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* ========================================================================
+   Roadmap — vertical timeline
+   The spine runs from the first node to the last; each phase hangs off it.
+   ===================================================================== */
+
+.timeline {
+  --tl-node: 0.75rem;
+  --tl-gutter: 2rem;
+  --tl-lead: var(--space-xl);
+
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-xl) 0 var(--space-3xl) var(--tl-gutter);
+}
+
+@media (min-width: 40rem) {
+  .timeline {
+    --tl-gutter: 2.75rem;
+  }
+}
+
+/* The spine — stops at the centre of the first and last node, so it never
+   dangles past the content. */
+.timeline::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: calc(var(--tl-node) / 2 - 1px);
+  inset-block-start: calc(var(--space-xl) + var(--tl-lead) + var(--tl-node) / 2);
+  inset-block-end: calc(var(--space-3xl) + var(--tl-lead) + var(--tl-node) / 2);
+  width: 2px;
+  background: var(--color-rule);
+  border-radius: var(--radius-pill);
+}
+
+.phase {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+  padding-block: var(--tl-lead);
+}
+
+/* The node */
+.phase::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: calc(var(--tl-gutter) * -1);
+  inset-block-start: calc(var(--tl-lead) + var(--space-xs));
+  width: var(--tl-node);
+  height: var(--tl-node);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  border: 2px solid var(--color-rule);
+}
+
+/* Shipped phases get a filled node; the phase in flight gets a ring. */
+.phase--complete::before {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.phase--now::before {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-paper-2);
+}
+
+@media (min-width: 56rem) {
+  .phase {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-2xl);
+  }
+}
+
+.phase__id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.phase--now .phase__id {
+  color: var(--color-accent);
+}
+
+.phase h2 {
+  font-size: var(--text-lg);
+  margin-block-start: var(--space-xs);
+  max-width: 20ch;
+}
+.phase__when {
+  margin-block-start: var(--space-xs);
+  font-size: var(--text-sm);
+  color: var(--color-neutral);
+}
+
+.phase__body p {
+  color: var(--color-ink-2);
+  max-width: 56ch;
+}
+
+.phase__items {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-xs);
+}
+.phase__items li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  gap: var(--space-xs);
+  align-items: baseline;
+  font-size: var(--text-sm);
+  color: var(--color-ink-2);
+}
+.phase__items .state {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-neutral);
+}
+.phase__items .state--done {
+  color: var(--color-accent);
+}
+.phase__items .done {
+  color: var(--color-muted);
+}
+
+/* ========================================================================
+   Blog index
+   ===================================================================== */
+
+.posts {
+  display: grid;
+  gap: 0;
+  padding-block: var(--space-xl) var(--space-3xl);
+}
+
+.post-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  padding-block: var(--space-xl);
+  border-block-start: var(--rule-hair) solid var(--color-rule-2);
+}
+@media (min-width: 52rem) {
+  .post-row {
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: var(--space-xl);
+    align-items: baseline;
+  }
+}
+.post-row__date {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+.post-row h2 {
+  font-size: var(--text-md);
+  max-width: 26ch;
+  transition: color var(--dur-short) var(--ease-out);
+}
+.post-row a:hover h2 {
+  color: var(--color-accent);
+}
+.post-row p {
+  margin-block-start: var(--space-xs);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  max-width: 60ch;
+}
+
+.empty {
+  padding-block: var(--space-3xl);
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: start;
+}
+.empty h2 {
+  font-size: var(--text-lg);
+}
+.empty p {
+  color: var(--color-muted);
+  max-width: 46ch;
+}
+/* ========================================================================
+   Page-load reveal — one orchestrated entrance, staggered by DOM index
+   ===================================================================== */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: reveal var(--dur-long) var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 150ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+  }
+  .reveal {
+    transform: none;
+    animation: reveal-reduced 150ms linear forwards;
+  }
+  @keyframes reveal-reduced {
+    to {
+      opacity: 1;
+    }
+  }
+}

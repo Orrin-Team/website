@@ -1,0 +1,77 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # lets you re-deploy by hand from the Actions tab
+
+# Never let two deploys race each other onto the server. A newer push cancels
+# an in-flight one rather than both rsyncing at once.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "::error::SITE_URL repository variable is not set. Add it under"
+            echo "::error::Settings → Secrets and variables → Actions → Variables."
+            exit 1
+          fi
+          npm run build
+
+      - name: Verify build output
+        run: |
+          test -f dist/index.html || { echo "::error::dist/index.html missing"; exit 1; }
+          echo "Built $(find dist -name '*.html' | wc -l | tr -d ' ') pages"
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Pinning the host key means a hijacked DNS record can't get us to
+          # hand our key to someone else's box.
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          # Trailing slash on dist/ copies the CONTENTS, not the directory.
+          # --delete removes files the build no longer produces, so renamed or
+          # removed pages don't linger on the server as stale URLs.
+          # The remote path is ./ because the deploy key is confined by rrsync
+          # to the web root — it cannot write anywhere else.
+          rsync -avz --delete \
+            --human-readable \
+            --exclude '.DS_Store' \
+            -e "ssh -o StrictHostKeyChecking=yes" \
+            dist/ "$DEPLOY_USER@$DEPLOY_HOST:./"
+
+      - name: Clean up key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519

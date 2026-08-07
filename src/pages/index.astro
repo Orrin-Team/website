@@ -1,0 +1,253 @@
+---
+import Base from "../layouts/Base.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import Shot from "../components/Shot.astro";
+
+// ---------------------------------------------------------------------------
+// Screenshot slots. To fill one in: drop the capture into `public/shots/` and
+// set `src` below. Nothing else needs to change - the placeholder disappears,
+// the caption and alt text stay correct, and the layout holds because the
+// dimensions here already reserve the right aspect ratio.
+//
+// Keep `w`/`h` matching the real file's pixel size to avoid layout shift.
+// ---------------------------------------------------------------------------
+const SHOTS = {
+  // w/h are the files' real pixel dimensions — they reserve the aspect ratio,
+  // so the page doesn't jump as the images load.
+  editor: {
+    src: "/shots/Editor.png",
+    w: 2105,
+    h: 1228,
+    caption: "The editor, mid-session",
+    alt: "The Orrin editor: an entity hierarchy on the left, a viewport rendering a grid of textured cubes and reflective spheres under an HDRI sky, environment and shadow controls on the right, an inspector for the selected cube, and a console logging scripts rebuilding and reloading.",
+  },
+  // Sits in the "Two seconds" diptych, not the showcase.
+  reload: {
+    src: "/shots/BuildWatcher.png",
+    w: 607,
+    h: 266,
+    caption: "The build watcher, after a 0.8 s rebuild",
+    alt: "Orrin's Scripts panel reading “Build up to date (0.8s)”, with “Reload after a successful rebuild” ticked and one behaviour attached.",
+  },
+};
+
+---
+
+<Base
+  title="Orrin Engine - a fast, fit to purpose game engine"
+  description="Orrin is an open-source 3D game engine written in Rust with C# scripting. Edit code while the project runs, and take only the subsystems your game needs."
+>
+  <!-- Hero · H2 Split Diptych 7/5 - explanation left, real commands right -->
+  <section class="hero shell">
+    <div class="hero__grid">
+      <div>
+        <h1 class="hero__title reveal" style="--i:0">
+          Make the engine yours.
+        </h1>
+
+        <p class="lede hero__lede reveal" style="--i:1">
+          Orrin is an open-source 3D engine written in Rust, with C# scripting
+          hosted in-process. It's built so you can take the subsystems your game
+          needs and leave the rest behind.
+        </p>
+
+        <div class="hero__actions reveal" style="--i:2">
+          <a class="btn btn--accent" href="/docs/getting-started/">Get started</a>
+          <a
+            class="btn btn--ghost"
+            href="https://github.com/Orrin-Team/orrin"
+            rel="noopener">View source</a
+          >
+        </div>
+
+        <ul class="hero__meta mono reveal" style="--i:3">
+          <li><i class="hero__dot" aria-hidden="true"></i>Rust core</li>
+          <li><i class="hero__dot" aria-hidden="true"></i>Vulkan via vulkano</li>
+          <li><i class="hero__dot" aria-hidden="true"></i>C# via CoreCLR</li>
+          <li><i class="hero__dot" aria-hidden="true"></i>GPL-2.0</li>
+        </ul>
+      </div>
+
+      <div class="reveal" style="--i:4">
+        <CodeBlock
+          label="quick start"
+          lines={[
+            "# Run the engine on its built-in demo",
+            "cargo run -p orrin-core",
+            "",
+            "# Or scaffold a project with the CLI",
+            "cargo build -p orrin-cli",
+            "./target/debug/orrin new my-game",
+          ]}
+        />
+      </div>
+    </div>
+  </section>
+
+  <div class="shell">
+    <!-- Showcase · one wide plate then an uneven pair -->
+    <section>
+      <header class="head-hang">
+        <h2>The editor</h2>
+        <p>
+          Early demo state, expect changes. 
+        </p>
+      </header>
+
+      <div class="showcase">
+        <Shot {...SHOTS.editor} priority={false} />
+      </div>
+    </section>
+
+    <!-- Split Studio · alternating diptychs -->
+    <section class="split">
+      <div class="split__text">
+        <h2>Only the engine you actually use</h2>
+        <p>
+          Most engines are generalised, so every project carries the weight of
+          every feature. Orrin's position is the opposite one: select the
+          options your game needs, and don't get held back by the rest.
+        </p>
+        <a class="tlink" href="/roadmap/">See what's shipped <span aria-hidden="true">→</span></a>
+      </div>
+
+      <div class="split__proof">
+        <div class="proof-row">
+          <span class="proof-row__k">Scope</span>
+          <span class="proof-row__v"
+            >3D first. 2D is planned for the future, not shipped.</span
+          >
+        </div>
+        <div class="proof-row">
+          <span class="proof-row__k">Modularity</span>
+          <span class="proof-row__v"
+            >The fit-to-purpose feature system is tracked as issue&nbsp;#59, in
+            Phase&nbsp;5. <span class="tag">Not shipped</span></span
+          >
+        </div>
+        <div class="proof-row">
+          <span class="proof-row__k">Licence</span>
+          <span class="proof-row__v"
+            >GPL-2.0. Full source, editor included.</span
+          >
+        </div>
+      </div>
+    </section>
+
+    <section class="split split--flip">
+      <div class="split__text">
+        <h2>Two seconds, or it's a regression</h2>
+        <p>
+          Unreal's compile-and-restart loop and Unity's domain-reload stalls are
+          the most-complained-about parts of both engines. Orrin treats “change
+          code, see the result in under two seconds” as a hard constraint every
+          subsystem has to respect - game code, shaders and assets alike.
+        </p>
+        <a class="tlink" href="/docs/scripting/"
+          >Read about scripting <span aria-hidden="true">→</span></a
+        >
+      </div>
+
+      <div class="split__proof">
+        <Shot {...SHOTS.reload} />
+        <p class="split__note">
+          Hot reloading and external game assemblies landed in Phase&nbsp;2
+          (issue&nbsp;#5); the build watcher is issue&nbsp;#18.
+        </p>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="split__text">
+        <h2>Nothing here should need our servers</h2>
+        <p>
+          Licensing changes, runtime fees and closed editors are the reason
+          people stop trusting an engine. Orrin's rule is that no subsystem may
+          ever depend on a service only the Orrin team can run. Anything
+          networked has to be self-hostable, with paid hosting as a convenience
+          on top.
+        </p>
+        <a class="tlink" href="/blog/why-orrin-exists/"
+          >The longer argument <span aria-hidden="true">→</span></a
+        >
+      </div>
+
+      <div class="split__proof">
+        <div class="proof-row">
+          <span class="proof-row__k">Source</span>
+          <span class="proof-row__v"
+            >Full source including the editor, under GPL-2.0.</span
+          >
+        </div>
+        <div class="proof-row">
+          <span class="proof-row__k">Servers</span>
+          <span class="proof-row__v"
+            >The collaboration server, registry and build cache are all planned
+            as single self-hostable Rust binaries.</span
+          >
+        </div>
+        <div class="proof-row">
+          <span class="proof-row__k">Rule</span>
+          <span class="proof-row__v"
+            >The hosted version must never do anything the self-hosted one
+            can't.</span
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- Honest status band -->
+    <section class="status">
+      <div>
+        <h2>Where the project actually is</h2>
+      </div>
+      <div>
+        <p>
+          Phases&nbsp;1 and 2 are largely closed: C# scripting, hot reload,
+          external game assemblies, the CLI and the build watcher all landed.
+          Phase&nbsp;3 (editor usability and the asset pipeline) and
+          Phase&nbsp;4 (shadows, lights, audio, in-game UI) are the open work.
+        </p>
+        <p>
+          Real-time collaboration and the package registry are named in the
+          architecture plan for 2027–2028. They are not implemented, and this
+          site doesn't pretend otherwise.
+        </p>
+        <p>
+          Contributions aren't open yet - the plan is to accept them after
+          Phase&nbsp;5. Until then, the
+          <a href="https://discord.gg/sY8YBGFmRy" rel="noopener">Discord</a> is where
+          development gets discussed.
+        </p>
+      </div>
+    </section>
+
+    <section class="closer">
+      <h2>Start with the demo scene</h2>
+      <p>
+        One <code class="mono">cargo run</code> gets the engine up with its
+        built-in demo. The CLI scaffolds a project with a manifest, a
+        <code class="mono">.csproj</code> and an entry Behaviour, so you don't have
+        to know the workspace layout first.
+      </p>
+      <a class="btn btn--accent" href="/docs/getting-started/">Get started</a>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .status a {
+    color: var(--color-accent);
+    border-block-end: 1px solid var(--color-rule);
+  }
+  .status a:hover {
+    border-block-end-color: var(--color-accent);
+  }
+  .closer code,
+  .head-hang code {
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-xs);
+    background: var(--color-paper-2);
+    color: var(--color-ink);
+  }
+</style>
