@@ -21,6 +21,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The announcement step diffs this push against the previous commit,
+          # so a shallow clone isn't enough to see what changed.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -75,3 +79,17 @@ jobs:
       - name: Clean up key
         if: always()
         run: rm -f ~/.ssh/id_ed25519
+
+      # Runs only after the deploy succeeded, so the link in the message always
+      # resolves. Never fails the workflow: the site is already live by this
+      # point, and a Discord outage shouldn't be reported as a failed deploy.
+      # A skipped announcement still shows up as a warning on the run.
+      - name: Announce new posts
+        if: github.event_name == 'push'
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          node scripts/announce-posts.mjs \
+            "${{ github.event.before }}" "${{ github.event.after }}"

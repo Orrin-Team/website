@@ -99,7 +99,7 @@ Renewal is automatic via certbot's systemd timer. Check it with
 
 ## GitHub configuration
 
-One variable, four secrets. `SITE_URL` is a *variable* rather than a secret
+One variable, five secrets. `SITE_URL` is a *variable* rather than a secret
 because it is public and it is useful to see it in the build log.
 
 | Name | Kind | Value |
@@ -109,6 +109,7 @@ because it is public and it is useful to see it in the build log.
 | `SSH_KNOWN_HOSTS` | secret | output of `ssh-keyscan -t ed25519 <VPS_IP>` |
 | `DEPLOY_HOST` | secret | the VPS IP or hostname |
 | `DEPLOY_USER` | secret | `deploy` |
+| `DISCORD_WEBHOOK_URL` | secret | the Discord channel webhook (see below) |
 
 Set them from your machine. `gh` reads the key from the file and sends it
 straight to GitHub's API — it never lands in your shell history, your
@@ -131,6 +132,36 @@ need it to rotate or re-add the secret. GitHub won't show it back to you.
 `SSH_KNOWN_HOSTS` pins the server's host key. Without it the workflow would
 accept whatever host answers, so a hijacked DNS record could be handed the
 deploy key. With it, the connection fails instead.
+
+## Discord announcements
+
+After a successful deploy, `scripts/announce-posts.mjs` posts newly published
+blog posts to Discord as plain text — title, description, link. The webhook URL
+is a credential: anyone holding it can post to that channel, so it lives only
+in the `DISCORD_WEBHOOK_URL` secret and never in the repo.
+
+```bash
+# Server Settings → Integrations → Webhooks → Copy Webhook URL
+printf '%s' '<webhook-url>' | gh secret set DISCORD_WEBHOOK_URL -R Orrin-Team/website
+```
+
+A post is announced when it *becomes public* — added, or flipped from
+`draft: true` to `draft: false` — and only if it actually built into `dist/`.
+Editing a post that was already live announces nothing, so fixing a typo won't
+re-post it. If the secret is absent the step logs that it skipped and moves on.
+
+To preview without sending anything, pass a commit range and `--dry-run`:
+
+```bash
+SITE_URL=https://orrinengine.com node scripts/announce-posts.mjs HEAD~1 HEAD --dry-run
+```
+
+Discord will render its own link preview from the page's Open Graph tags. To
+suppress that and leave bare text, add `flags: 4` to the JSON body in `post()`.
+
+To rotate the webhook: delete it in Discord's Integrations panel, create a new
+one, and re-run the `gh secret set` above. The old URL stops working the moment
+it's deleted.
 
 ## Rotating the deploy key
 
