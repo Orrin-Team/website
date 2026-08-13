@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
+import { Image } from "astro:assets";
 import Base from "../../layouts/Base.astro";
 
 export async function getStaticPaths() {
@@ -29,6 +30,20 @@ const fmt = new Intl.DateTimeFormat("en-GB", {
         <time datetime={entry.data.date.toISOString()}>{fmt}</time> · {entry.data.author}
       </p>
     </header>
+
+    {
+      entry.data.cover && (
+        <Image
+          class="post-hero"
+          src={entry.data.cover}
+          alt={entry.data.coverAlt!}
+          widths={[640, 960, 1280, 1920]}
+          sizes="(min-width: 64rem) 944px, 100vw"
+          loading="eager"
+          fetchpriority="high"
+        />
+      )
+    }
 
     <article class="prose post-body">
       <Content />

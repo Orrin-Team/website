@@ -1045,6 +1045,25 @@ svg {
   margin-block: var(--space-xl);
 }
 
+/* Body images match the cover art: same radius, no border. Markdown wraps an
+   image in a <p>, so the rounding has to be set here rather than on a figure. */
+.prose img {
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: var(--color-paper-2);
+}
+
+/* A screenshot of a dense UI is unreadable at the 65ch measure, so body images
+   run wider than the text they sit in. They only ever grow rightwards into the
+   shell's spare width — never into the gutter — and the viewport clamp keeps
+   the overflow off-screen at any width. */
+@media (min-width: 52rem) {
+  .post-body img {
+    width: 52rem;
+    max-width: calc(100vw - 2 * var(--page-gutter));
+  }
+}
+
 /* ========================================================================
    Docs shell — sidebar + body
    ===================================================================== */
@@ -1239,8 +1258,23 @@ svg {
 }
 
 /* ========================================================================
-   Blog index
+   Blog index + post cover art
    ===================================================================== */
+
+/* Covers are borderless like .shot, for the same reason: a hairline would
+   re-draw a frame the reader's window already gives them. */
+.post-hero,
+.post-row__thumb {
+  width: 100%;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  background: var(--color-paper-2);
+}
+
+.post-hero {
+  margin-block-start: var(--space-xl);
+  aspect-ratio: 16 / 9;
+}
 
 .posts {
   display: grid;
@@ -1262,6 +1296,24 @@ svg {
     align-items: baseline;
   }
 }
+/* Text first, thumbnail on the trailing edge, so a row without a cover keeps
+   its title on exactly the same line as one with — the list still scans as a
+   single column of headings whether or not the field is set. */
+.post-row__link {
+  display: grid;
+  gap: var(--space-md);
+}
+@media (min-width: 52rem) {
+  .post-row__link:has(.post-row__thumb) {
+    grid-template-columns: minmax(0, 1fr) 13rem;
+    gap: var(--space-xl);
+    align-items: start;
+  }
+}
+.post-row__thumb {
+  aspect-ratio: 16 / 9;
+}
+
 .post-row__date {
   font-family: var(--font-mono);
   font-size: var(--text-sm);

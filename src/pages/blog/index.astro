@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
 import Base from "../../layouts/Base.astro";
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
@@ -46,9 +47,23 @@ const fmt = (d: Date) =>
               <time class="post-row__date" datetime={p.data.date.toISOString()}>
                 {fmt(p.data.date)}
               </time>
-              <a href={`/blog/${p.id}/`}>
-                <h2>{p.data.title}</h2>
-                <p>{p.data.description}</p>
+              <a class="post-row__link" href={`/blog/${p.id}/`}>
+                <div class="post-row__text">
+                  <h2>{p.data.title}</h2>
+                  <p>{p.data.description}</p>
+                </div>
+                {p.data.cover && (
+                  /* alt="" on purpose: the thumbnail sits inside the same link
+                     as the title, so real alt text would make a screen reader
+                     announce the post twice. The hero on the post carries it. */
+                  <Image
+                    class="post-row__thumb"
+                    src={p.data.cover}
+                    alt=""
+                    widths={[208, 416, 640]}
+                    sizes="(min-width: 52rem) 208px, 100vw"
+                  />
+                )}
               </a>
             </article>
           ))}
