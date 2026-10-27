@@ -1,65 +1,117 @@
-/* Hallmark · tokens · Orrin Engine
- * theme: custom · vibe: "deep-space instrument, cool, precise"
- * paper: oklch(13% 0.020 235) · accent: oklch(80% 0.128 200)
- * axes: dark / display-heavy / cool
+/* Orrin Engine — design tokens
+ * ---------------------------------------------------------------------------
+ * Single source of truth for every colour, type size, space step, radius and
+ * duration on the site. If a value you need isn't here, add it here first.
  *
- * Palette anchored on the brand assets: OrrinBanner.png runs #02181b (teal,
- * hue ~200) to #08111e (navy, hue ~250); the mark is white. Paper takes the
- * navy end, accent takes the teal end. Nothing here is invented — the two
- * hues are sampled from the supplied artwork.
- */
+ * Theme: the editor's own look, on the web. Every colour below is lifted from
+ * the `orrin-dark` built-in theme in Orrin-Team/egui-orrin-theme — nine greys
+ * and an accent — so the site and the tool people download match:
+ *
+ *   text #D5D7DC · panel #141519 · window #1A1B20 · extreme #0F1013
+ *   faint #18191E · widget #1F2126 · widget_hover #2A2C33
+ *   outline #23252B · accent #4D8DFF
+ *
+ * The theme README describes Orrin's own popups as "frosted glass over a
+ * blurred scene" at 0.66 opacity, which is where the glass surfaces here come
+ * from. Same material, bigger canvas.
+ * ------------------------------------------------------------------------- */
 
 :root {
-  /* ---- Surfaces -------------------------------------------------------- */
-  --color-paper: oklch(13% 0.02 235);
-  --color-paper-2: oklch(17% 0.022 234);
-  --color-paper-3: oklch(21% 0.024 233);
+  /* ---- Paper ------------------------------------------------------------
+     The page behind the glass. `extreme` is the deepest surface in the editor,
+     so it's the page; `panel` and `faint` lift from it exactly as they do in
+     the tool. The two tints are the same greys pushed a few degrees of hue
+     apart — they only ever appear in the backdrop's gradients, never as a
+     surface colour. */
+  --paper: #0f1013;
+  --paper-2: #141519;
+  --paper-3: #18191e;
+  --surface: #1a1b20;
+  --widget: #1f2126;
+  --widget-hover: #2a2c33;
 
-  /* ---- Text ------------------------------------------------------------ */
-  --color-ink: oklch(95% 0.008 235);
-  --color-ink-2: oklch(78% 0.01 235);
-  --color-muted: oklch(63% 0.012 235);
-  /* 60%, not 48%: this colour renders code comments on --color-paper-2 (the
-     elevated code surface, not the page surface). At 48% that pair is 3.6:1
-     and at 58% it is 4.48:1 — both under the 4.5:1 body floor. 60% clears it. */
-  --color-neutral: oklch(60% 0.014 235);
+  --tint-blue: #16203a;
+  --tint-cool: #121a26;
 
-  /* ---- Rules ----------------------------------------------------------- */
-  --color-rule: oklch(29% 0.018 235);
-  --color-rule-2: oklch(24% 0.016 235);
+  /* ---- Glass ------------------------------------------------------------
+     Surfaces are white at a low alpha, not opaque greys — they have to let the
+     animated backdrop through. Three tiers of lift, plus the specular edge
+     that makes a pane read as glass rather than as a flat translucent box. */
+  --glass-1: rgb(255 255 255 / 3.5%);
+  --glass-2: rgb(255 255 255 / 5.5%);
+  --glass-3: rgb(255 255 255 / 8%);
+  --glass-edge: rgb(255 255 255 / 11%);
+  --glass-edge-hi: rgb(255 255 255 / 26%);
+  --glass-edge-lo: rgb(255 255 255 / 3%);
+  --glass-blur: 18px;
+  --glass-blur-lg: 36px;
+  --glass-sat: 140%;
 
-  /* ---- Accent (one hue, three roles) ----------------------------------- */
-  --color-accent: oklch(80% 0.128 200);
-  --color-accent-2: oklch(68% 0.115 205);
-  --color-accent-ink: oklch(15% 0.024 235);
-  --color-focus: oklch(84% 0.175 200);
+  /* Shadow under a pane. Two layers: a tight contact shadow and a wide soft
+     one, so panes sit on the page instead of floating in front of it. */
+  --shadow-pane: 0 1px 2px rgb(0 0 0 / 34%), 0 16px 44px -16px rgb(0 0 0 / 60%);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 34%), 0 30px 60px -22px rgb(0 0 0 / 64%);
 
-  /* ---- Brand (sampled from the supplied artwork, exact) ---------------- */
-  --color-brand-teal: oklch(19.2% 0.03 207); /* #02181b — banner, left edge  */
-  --color-brand-navy: oklch(17.6% 0.031 257); /* #08111e — banner, right edge */
+  /* ---- Ink --------------------------------------------------------------
+     `text` from the theme, then three steps down. --ink-4 is the floor: it
+     measures 6.0:1 on --paper, so it still clears the 4.5:1 body minimum once
+     a glass pane lifts the surface under it. Nothing dimmer than this. */
+  --ink: #d5d7dc;
+  --ink-2: #b4b8c1;
+  --ink-3: #9a9ea9;
+  --ink-4: #868a94;
 
-  /* ---- Type ------------------------------------------------------------ */
-  /* Geist carries both display and body. With one family doing both jobs, the
-     hierarchy rests entirely on weight — body sits at 350 and display at 800,
-     a 450-unit gap, so headings still read as headings. */
+  /* ---- Rules ------------------------------------------------------------
+     `outline` is the editor's border colour. The translucent pair is for rules
+     drawn on glass, where an opaque hairline reads as a seam. */
+  --outline: #23252b;
+  --rule: rgb(255 255 255 / 9%);
+  --rule-soft: rgb(255 255 255 / 5%);
+
+  /* ---- Accent (one hue, four roles) -------------------------------------
+     #4D8DFF, the editor accent. 6.0:1 on --paper, so it is safe as text.
+     --accent-rgb exists so the alpha variants below can be mixed inline.
+
+     There is deliberately no glow colour here. Accent light belongs to the
+     backdrop; a control that haloes reads as lit from inside, which the
+     editor's own chrome never does. */
+  --accent-rgb: 77 141 255;
+  --accent: rgb(var(--accent-rgb));
+  --accent-2: #7aa9ff;
+  --accent-ink: #0b0f18;
+  --accent-wash: rgb(var(--accent-rgb) / 9%);
+  --focus: #8ab4ff;
+
+  /* ---- Status -----------------------------------------------------------
+     Fixed across every editor theme, so green means the same thing in the
+     tool and on this page. Used by the roadmap. */
+  --ok: #5fb55a;
+  --pending: #e8b34a;
+  --error: #ff7b72;
+
+  /* ---- Type ------------------------------------------------------------
+     Two families. Geist does display and body; the hierarchy rests on weight
+     and size, not on a third typeface. JetBrains Mono carries machine text
+     only — commands, identifiers, issue numbers, dates — and is the same face
+     the editor bundles. */
   --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* Major third, 1.25 */
-  --text-xs: 0.64rem;
-  --text-sm: 0.8rem;
-  --text-base: 1rem;
-  --text-md: 1.25rem;
-  --text-lg: 1.5625rem;
-  --text-xl: 1.9531rem;
-  --text-2xl: 2.4414rem;
-  --text-3xl: 3.0518rem;
-  --text-4xl: 3.8147rem;
-  --text-display: clamp(2.75rem, 5vw + 1rem, 5.25rem);
-  --text-display-s: clamp(2.25rem, 3.5vw + 1rem, 3.5rem);
+  /* Minor third, 1.2 — a gentler ramp than a major third, which is what makes
+     the page read as calmer at the same information density. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1.0313rem;
+  --text-md: 1.1875rem;
+  --text-lg: 1.4375rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.125rem;
+  --text-3xl: 2.625rem;
+  --text-display: clamp(2.875rem, 1.75rem + 4.2vw, 5rem);
+  --text-display-s: clamp(2.125rem, 1.4rem + 2.6vw, 3.25rem);
 
-  /* ---- Space (4pt) ------------------------------------------------------ */
+  /* ---- Space (4pt) ----------------------------------------------------- */
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;
   --space-xs: 0.5rem;
@@ -68,35 +120,43 @@
   --space-lg: 1.5rem;
   --space-xl: 2.5rem;
   --space-2xl: 4rem;
-  --space-3xl: 6rem;
-  --space-4xl: 9rem;
+  --space-3xl: 6.5rem;
+  --space-4xl: 9.5rem;
 
-  /* ---- Page ------------------------------------------------------------- */
-  --page-max: 78rem;
-  --page-gutter: clamp(1.125rem, 4vw, 3rem);
-  --measure: 65ch;
+  /* ---- Page ------------------------------------------------------------ */
+  --page-max: 76rem;
+  --page-gutter: clamp(1.125rem, 4vw, 2.75rem);
+  --measure: 68ch;
+  --nav-h: 3.5rem;
 
-  /* ---- Rules / radii ---------------------------------------------------- */
-  --rule-hair: 1px;
-  --radius-xs: 3px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  /* ---- Radii -----------------------------------------------------------
+     The editor rounds widgets at 5, menus at 6 and windows at 8. --radius-xs
+     and --radius-sm are those values, used on anything that stands in for a
+     control. Panes go softer than the tool does, because a web page has room
+     to breathe that a docked panel does not. */
+  --radius-xs: 5px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-pill: 999px;
 
-  /* ---- Motion ----------------------------------------------------------- */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  /* ---- Motion ----------------------------------------------------------
+     Long, soft easings. Nothing on this site should snap. (The editor itself
+     is near-motionless by design; a landing page is allowed more.) */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-micro: 120ms;
-  --dur-short: 220ms;
-  --dur-long: 420ms;
+  --ease-glide: cubic-bezier(0.33, 1, 0.68, 1);
+  --dur-micro: 140ms;
+  --dur-short: 260ms;
+  --dur-mid: 460ms;
+  --dur-long: 800ms;
 
-  /* ---- Depth ------------------------------------------------------------ */
+  /* ---- Depth ----------------------------------------------------------- */
+  --z-backdrop: 0;
   --z-base: 1;
   --z-raised: 10;
-  --z-dropdown: 100;
   --z-sticky: 200;
-  --z-modal: 400;
+  --z-sheet: 300;
   --z-toast: 500;
-  --z-tooltip: 600;
 }

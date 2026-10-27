@@ -14,7 +14,7 @@
 // so there's nothing to link to and nothing gets sent.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const BLOG_DIR = "src/content/blog";

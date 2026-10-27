@@ -1,0 +1,494 @@
+---
+/**
+ * The animated layer every page sits on top of.
+ *
+ * Four layers, back to front:
+ *   1. a flat base gradient, so the page has a colour before any JS runs;
+ *   2. three slow aurora blobs — what the glass panes actually refract;
+ *   3. a canvas drawing a wireframe mesh over a receding ground grid, which is
+ *      the engine reference: it's a viewport, rendered in the editor's accent;
+ *   4. a vignette, to keep the corners from competing with the content.
+ *
+ * Only layer 3 costs anything. It is skipped entirely under
+ * `prefers-reduced-motion` (one static frame is drawn instead) and paused
+ * whenever the tab is hidden.
+ *
+ * There is nothing to configure here — it's decoration, and it carries no
+ * content. Copy lives in src/data/.
+ */
+---
+
+<div class="backdrop" aria-hidden="true">
+  <div class="backdrop__base"></div>
+  <div class="backdrop__aurora">
+    <span class="blob blob--a"></span>
+    <span class="blob blob--b"></span>
+    <span class="blob blob--c"></span>
+  </div>
+  <canvas class="backdrop__canvas" data-engine-canvas></canvas>
+  <div class="backdrop__vignette"></div>
+</div>
+
+<style>
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-backdrop);
+    overflow: hidden;
+    pointer-events: none;
+    /* The whole stack is painted once and composited — it never reflows the
+       document above it. */
+    contain: strict;
+  }
+
+  .backdrop__base,
+  .backdrop__aurora,
+  .backdrop__canvas,
+  .backdrop__vignette {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* A canvas has an intrinsic 300×150, and `inset: 0` alone does not override
+     it — the explicit 100%/100% is what makes the element fill the layer. The
+     backing store is sized to match in script. */
+  .backdrop__canvas {
+    inline-size: 100%;
+    block-size: 100%;
+    display: block;
+  }
+
+  /* 1 · Base ------------------------------------------------------------- */
+  .backdrop__base {
+    background:
+      radial-gradient(
+        120% 90% at 50% -10%,
+        var(--tint-blue) 0%,
+        transparent 62%
+      ),
+      linear-gradient(180deg, var(--paper-2) 0%, var(--paper) 55%, var(--paper) 100%);
+  }
+
+  /* 2 · Aurora ----------------------------------------------------------- */
+  .backdrop__aurora {
+    /* One filter on the parent instead of three on the children: the blobs
+       composite together, so where two overlap they read as one body of light
+       rather than two blurred discs. */
+    filter: blur(64px) saturate(130%);
+    opacity: 0.85;
+  }
+
+  .blob {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    will-change: transform;
+  }
+
+  .blob--a {
+    inset-block-start: -18vh;
+    inset-inline-start: -10vw;
+    width: 62vw;
+    height: 62vw;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgb(var(--accent-rgb) / 15%) 0%,
+      rgb(var(--accent-rgb) / 5%) 42%,
+      transparent 70%
+    );
+    animation: drift-a 46s var(--ease-in-out) infinite;
+  }
+
+  .blob--b {
+    inset-block-start: 24vh;
+    inset-inline-end: -16vw;
+    width: 54vw;
+    height: 54vw;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgb(var(--accent-rgb) / 10%) 0%,
+      rgb(122 169 255 / 4%) 46%,
+      transparent 72%
+    );
+    animation: drift-b 58s var(--ease-in-out) infinite;
+  }
+
+  .blob--c {
+    inset-block-end: -26vh;
+    inset-inline-start: 22vw;
+    width: 70vw;
+    height: 48vw;
+    background: radial-gradient(
+      ellipse at 50% 50%,
+      rgb(255 255 255 / 5%) 0%,
+      rgb(var(--accent-rgb) / 4%) 50%,
+      transparent 74%
+    );
+    animation: drift-c 72s var(--ease-in-out) infinite;
+  }
+
+  /* Each blob travels a different distance on a different period, so the three
+     never line back up into a visible loop. */
+  @keyframes drift-a {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(8vw, 6vh, 0) scale(1.14);
+    }
+  }
+  @keyframes drift-b {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1.08);
+    }
+    50% {
+      transform: translate3d(-10vw, -8vh, 0) scale(1);
+    }
+  }
+  @keyframes drift-c {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(-6vw, 4vh, 0) scale(1.1);
+    }
+  }
+
+  /* 4 · Vignette --------------------------------------------------------- */
+  .backdrop__vignette {
+    background:
+      radial-gradient(
+        150% 115% at 50% 42%,
+        transparent 42%,
+        rgb(0 0 0 / 30%) 100%
+      ),
+      /* Stops short of opaque: a full fade to --paper down here erased the
+         near end of the ground grid entirely. */
+      linear-gradient(180deg, transparent 64%, rgb(15 16 19 / 62%) 100%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blob {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  /* ---------------------------------------------------------------------------
+   * The viewport layer: a subdivided icosahedron drawn as wireframe over a
+   * ground grid that scrolls toward the camera. Canvas 2D with the projection
+   * done by hand — it's a few hundred lines and edges, far below the point
+   * where a WebGL context would earn its weight.
+   * ------------------------------------------------------------------------ */
+
+  type V3 = [number, number, number];
+
+  const canvas = document.querySelector<HTMLCanvasElement>("[data-engine-canvas]");
+  const ctx = canvas?.getContext("2d", { alpha: true });
+
+  if (canvas && ctx) {
+    /* -- Geometry ---------------------------------------------------------- */
+
+    /** Unit icosahedron, subdivided `order` times and re-normalised onto the
+     *  sphere. Returns unique vertices and the unique edge list. */
+    function icosphere(order: number) {
+      const t = (1 + Math.sqrt(5)) / 2;
+      let verts: V3[] = [
+        [-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0],
+        [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t],
+        [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1],
+      ];
+      let faces: [number, number, number][] = [
+        [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+        [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+        [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+        [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],
+      ];
+
+      // Midpoints are shared between adjacent faces; the cache is what keeps
+      // the vertex list unique, which in turn keeps the edge set unique.
+      for (let i = 0; i < order; i++) {
+        const mid = new Map<string, number>();
+        const next: [number, number, number][] = [];
+        const midpoint = (a: number, b: number) => {
+          const key = a < b ? `${a}_${b}` : `${b}_${a}`;
+          const hit = mid.get(key);
+          if (hit !== undefined) return hit;
+          const [ax, ay, az] = verts[a];
+          const [bx, by, bz] = verts[b];
+          const index = verts.length;
+          verts.push([(ax + bx) / 2, (ay + by) / 2, (az + bz) / 2]);
+          mid.set(key, index);
+          return index;
+        };
+        for (const [a, b, c] of faces) {
+          const ab = midpoint(a, b);
+          const bc = midpoint(b, c);
+          const ca = midpoint(c, a);
+          next.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]);
+        }
+        faces = next;
+      }
+
+      for (const v of verts) {
+        const len = Math.hypot(v[0], v[1], v[2]) || 1;
+        v[0] /= len;
+        v[1] /= len;
+        v[2] /= len;
+      }
+
+      const seen = new Set<string>();
+      const edges: [number, number][] = [];
+      for (const [a, b, c] of faces) {
+        for (const [x, y] of [[a, b], [b, c], [c, a]] as [number, number][]) {
+          const key = x < y ? `${x}_${y}` : `${y}_${x}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          edges.push([x, y]);
+        }
+      }
+      return { verts, edges };
+    }
+
+    const MESH = icosphere(2); // 162 vertices, 480 edges
+    const projected = MESH.verts.map(() => ({ x: 0, y: 0, d: 0 }));
+
+    /* -- Canvas sizing ----------------------------------------------------- */
+
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+
+    const resize = () => {
+      // Capped at 2: beyond that the extra pixels cost real time and buy
+      // nothing on a layer this faint.
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.clientWidth;
+      h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    /* -- Drawing ----------------------------------------------------------- */
+
+    const ACCENT = "77, 141, 255";
+    const CAM = 3.25; // the camera sits at z = CAM, looking toward -z
+    const GRID_STEP = 1.2;
+    const GRID_LINES = 22;
+    const GRID_SPAN = GRID_STEP * GRID_LINES;
+    const PLANE_Y = -1.9; // the ground, below the camera
+    const GRID_NEAR = 0.45; // closest a line may get before it wraps away
+
+    /** Perspective-project a rotated point. Returns null when it's behind the
+     *  camera, which the grid needs and the mesh never hits. */
+    const project = (x: number, y: number, z: number, focal: number) => {
+      const d = CAM - z;
+      if (d < 0.15) return null;
+      const f = focal / d;
+      return { x: x * f, y: -y * f, d };
+    };
+
+    /**
+     * A ground plane receding to a horizon, scrolling toward the camera.
+     *
+     * No pitch rotation: the camera is simply above the plane, which is what
+     * makes it recede. The horizon lands exactly at `cy`, because a point at
+     * z = -infinity projects to y = cy however far below the camera it is.
+     */
+    const drawGrid = (t: number, focal: number, cx: number, cy: number) => {
+      // One cell per cycle, wrapped. A line that reaches the near plane jumps
+      // back to the far end, where it has already faded to nothing.
+      const offset = (t * 0.42) % GRID_STEP;
+
+      /** Project a point on the plane. `null` once it is behind the camera. */
+      const at = (gx: number, gz: number) => {
+        const d = CAM - gz;
+        if (d < 0.2) return null;
+        const f = focal / d;
+        return { x: cx + gx * f, y: cy - PLANE_Y * f, d };
+      };
+
+      // Distance falloff. Squared-ish, so the far half of the plane dissolves
+      // instead of ending on a visible line.
+      const fade = (d: number) => {
+        const k = 1 - d / (GRID_SPAN + 2);
+        return k <= 0 ? 0 : Math.pow(k, 1.7);
+      };
+
+      const edge = (GRID_LINES * GRID_STEP) / 2;
+      ctx.lineWidth = 1;
+
+      // Lines across the view. Each sits at one depth, so each gets one alpha
+      // and the fade reads as distance rather than as a gradient.
+      for (let i = 0; i < GRID_LINES; i++) {
+        const travelled = (i * GRID_STEP + offset) % GRID_SPAN;
+        const gz = CAM - GRID_NEAR - (GRID_SPAN - travelled);
+        const a = at(-edge, gz);
+        const b = at(edge, gz);
+        if (!a || !b) continue;
+        const alpha = fade(a.d) * 0.1;
+        if (alpha < 0.002) continue;
+        ctx.strokeStyle = `rgba(${ACCENT}, ${alpha.toFixed(4)})`;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+
+      // Lines running away from the camera. One path at one alpha: they all
+      // converge on the horizon, which carries the depth on its own.
+      ctx.strokeStyle = `rgba(${ACCENT}, 0.045)`;
+      ctx.beginPath();
+      for (let i = 0; i <= GRID_LINES; i++) {
+        const gx = -edge + i * GRID_STEP;
+        const near = at(gx, CAM - GRID_NEAR);
+        const far = at(gx, CAM - GRID_NEAR - GRID_SPAN);
+        if (!near || !far) continue;
+        ctx.moveTo(near.x, near.y);
+        ctx.lineTo(far.x, far.y);
+      }
+      ctx.stroke();
+    };
+
+    const BUCKETS = 6;
+
+    const drawMesh = (t: number, focal: number, cx: number, cy: number) => {
+      // Two axes at incommensurable rates: the mesh never returns to the same
+      // orientation, so there's no loop to notice.
+      const ay = t * 0.055;
+      const ax = Math.sin(t * 0.031) * 0.42 + 0.22;
+      const cosY = Math.cos(ay);
+      const sinY = Math.sin(ay);
+      const cosX = Math.cos(ax);
+      const sinX = Math.sin(ax);
+
+      for (let i = 0; i < MESH.verts.length; i++) {
+        const [vx, vy, vz] = MESH.verts[i];
+        // Y then X. Scale is folded into the projection via `focal`.
+        const x1 = vx * cosY + vz * sinY;
+        const z1 = -vx * sinY + vz * cosY;
+        const y2 = vy * cosX - z1 * sinX;
+        const z2 = vy * sinX + z1 * cosX;
+        const p = project(x1, y2, z2, focal);
+        const out = projected[i];
+        if (!p) {
+          out.d = -1;
+          continue;
+        }
+        out.x = cx + p.x;
+        out.y = cy + p.y;
+        // 0 at the back of the sphere, 1 at the front.
+        out.d = 1 - (p.d - (CAM - 1)) / 2;
+      }
+
+      // Edges bucketed by depth: six paths instead of 480 strokeStyle writes.
+      const paths: Path2D[] = Array.from({ length: BUCKETS }, () => new Path2D());
+      for (const [a, b] of MESH.edges) {
+        const pa = projected[a];
+        const pb = projected[b];
+        if (pa.d < 0 || pb.d < 0) continue;
+        const depth = (pa.d + pb.d) / 2;
+        const slot = Math.min(BUCKETS - 1, Math.max(0, Math.floor(depth * BUCKETS)));
+        paths[slot].moveTo(pa.x, pa.y);
+        paths[slot].lineTo(pb.x, pb.y);
+      }
+
+      ctx.lineWidth = 1;
+      ctx.lineCap = "round";
+      for (let s = 0; s < BUCKETS; s++) {
+        const near = (s + 0.5) / BUCKETS; // 0 = far side, 1 = near side
+        const alpha = 0.012 + near * near * 0.085;
+        ctx.strokeStyle = `rgba(${ACCENT}, ${alpha.toFixed(4)})`;
+        ctx.stroke(paths[s]);
+      }
+
+      // Vertices, front half only — the far ones would show through the mesh
+      // and flatten it.
+      for (const p of projected) {
+        if (p.d < 0.55) continue;
+        const a = (p.d - 0.55) * 0.3;
+        ctx.fillStyle = `rgba(${ACCENT}, ${a.toFixed(4)})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.1 + p.d * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    const frame = (t: number) => {
+      ctx.clearRect(0, 0, w, h);
+      if (w < 2 || h < 2) return;
+
+      const focal = Math.min(w, h) * 0.52;
+      const wide = w > 900;
+
+      // The horizon sits below the middle and the mesh floats above it, so the
+      // two read as one scene rather than as two overlapping textures.
+      drawGrid(t, focal, w * 0.5, h * 0.62);
+      // On a phone the mesh moves up and right and shrinks, so it sits beside
+      // the headline rather than directly behind it.
+      drawMesh(
+        t,
+        focal * (wide ? 0.8 : 0.6),
+        w * (wide ? 0.74 : 0.68),
+        h * (wide ? 0.33 : 0.19),
+      );
+    };
+
+    /* -- Loop -------------------------------------------------------------- */
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let raf = 0;
+    let start = 0;
+
+    const tick = (now: number) => {
+      if (!start) start = now;
+      frame((now - start) / 1000);
+      raf = requestAnimationFrame(tick);
+    };
+
+    const stop = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+    };
+
+    const run = () => {
+      stop();
+      resize();
+      if (reduced.matches) {
+        // A single frame at a fixed time: the scene is still there, nothing
+        // moves. Not a blank layer — that would change the composition.
+        frame(8);
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    // Debounced, because a window drag fires resize continuously and each one
+    // reallocates the backing store.
+    let resizeTimer: number | undefined;
+    addEventListener(
+      "resize",
+      () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(run, 150);
+      },
+      { passive: true },
+    );
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stop();
+      else if (!reduced.matches) {
+        start = 0;
+        raf = requestAnimationFrame(tick);
+      }
+    });
+
+    reduced.addEventListener("change", run);
+    run();
+  }
+</script>

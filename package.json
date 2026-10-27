@@ -7,9 +7,14 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "api:docs": "node scripts/gen-api-docs.mjs"
   },
   "dependencies": {
     "astro": "^5.6.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "typescript": "^5.9.3"
   }
 }

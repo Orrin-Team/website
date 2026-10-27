@@ -1,20 +1,15 @@
-/* Hallmark · pre-emit critique: P5 H4 E4 S5 R4 V5
- * Hallmark · genre: atmospheric · macrostructure: Split Studio
- * H2 hero knobs: ratio=7/5, right=code column, divider=negative space
- * F3 spec knobs: columns=3, rules=every row, numbers=tabular
- * nav: N1b (centre links=4, dropdowns=0, scroll=frost-on-scroll)
- * footer: Ft5 Statement (width=38ch, wordmark=under sentence, rule=hairline)
- * theme: custom · vibe: "deep-space instrument, cool, precise"
- * paper: oklch(13% 0.020 235) · accent: oklch(80% 0.128 200)
- * display: Geist 800 · body: Geist 350 · outlier: JetBrains Mono (machine text)
- * axes: dark / geometric-sans / cool
- * enrichment: typography + supplied brand mark + 3 labelled screenshot slots
- *   (no stock imagery — a screenshot of the engine can only come from the user)
- * contrast: pass (40–41) · nav: N1b · footer: Ft5 · slop: pass (42–45)
- * honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (49)
- * icons: pass (30) · mobile: pass (34, 49, 50–57)
- * studied: no · context: user-provided (audience/use/tone/stack) · v1.1.0
- */
+/* Orrin Engine — global stylesheet
+ * ---------------------------------------------------------------------------
+ * Every colour, size, space and duration here references a token from
+ * tokens.css by name. If you need a value that doesn't exist, add it there
+ * first rather than hard-coding it.
+ *
+ * The material: translucent panes over an animated backdrop (Backdrop.astro).
+ * A pane is one element with two background layers — a flat tint plus a sheen
+ * down from the top edge — and a `::before` that draws a 1px gradient border.
+ * That border is what separates "glass" from "a slightly see-through box": it
+ * catches light on the top-left and falls away toward the bottom-right.
+ * ------------------------------------------------------------------------- */
 
 @import "./tokens.css";
 
@@ -31,18 +26,21 @@
 html {
   overflow-x: clip;
   scroll-behavior: smooth;
+  scroll-padding-block-start: calc(var(--nav-h) + var(--space-xl));
   -webkit-text-size-adjust: 100%;
 }
 
 body {
   overflow-x: clip;
   margin: 0;
-  background: var(--color-paper);
-  color: var(--color-ink);
+  /* The backdrop is fixed and sits behind everything, but this still has to be
+     set: it's what shows during overscroll and before the canvas paints. */
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--text-base);
-  font-weight: 350;
-  line-height: 1.6;
+  font-weight: 400;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -53,22 +51,38 @@ body {
   }
 }
 
+/* Everything that isn't the backdrop lives above it. */
+main,
+.nav,
+.foot {
+  position: relative;
+  z-index: var(--z-base);
+}
+
+main {
+  display: block;
+  padding-block-start: calc(var(--nav-h) + var(--space-lg));
+}
+
 h1,
 h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-style: normal;
-  font-weight: 800;
-  line-height: 1.06;
-  letter-spacing: -0.03em;
+  /* 620, not 800. The weight still separates a heading from body text, but it
+     stops the page shouting — which is most of what reads as "calmer". */
+  font-weight: 620;
+  line-height: 1.1;
+  letter-spacing: -0.022em;
   overflow-wrap: anywhere;
   min-width: 0;
   margin: 0;
+  text-wrap: balance;
 }
 
 p {
   margin: 0;
+  text-wrap: pretty;
 }
 
 a {
@@ -76,6 +90,8 @@ a {
   text-decoration: none;
 }
 
+/* Deliberately NOT `canvas`: the backdrop canvas is stretched by `inset: 0`,
+   and `height: auto` would collapse it back to its intrinsic 300×150. */
 img,
 svg {
   display: block;
@@ -84,12 +100,12 @@ svg {
 }
 
 ::selection {
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
   border-radius: var(--radius-xs);
 }
@@ -100,14 +116,110 @@ svg {
   inset-block-start: -100%;
   z-index: var(--z-toast);
   padding: var(--space-sm) var(--space-md);
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
+  background: var(--accent);
+  color: var(--accent-ink);
   font-size: var(--text-sm);
   font-weight: 600;
   border-radius: var(--radius-sm);
 }
 .skip-link:focus-visible {
   inset-block-start: var(--space-md);
+}
+
+/* ========================================================================
+   The glass material
+   ===================================================================== */
+
+.pane {
+  position: relative;
+  border-radius: var(--radius-lg);
+  /* Two layers: the sheen falls from the top edge, the tint fills the rest. */
+  background-color: var(--glass-2);
+  background-image: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 5%) 0%,
+    rgb(255 255 255 / 0%) 42%
+  );
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  box-shadow: var(--shadow-pane);
+  /* Keeps the pane's own stacking context to itself, so a sheen or a border
+     can't paint over a neighbouring pane. */
+  isolation: isolate;
+}
+
+/* The specular edge. A 1px gradient border, drawn as a masked ring so the
+   gradient can run around the corner radius — a plain `border` can only be one
+   flat colour, which is exactly what makes a fake glass pane look fake. */
+.pane::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    152deg,
+    var(--glass-edge-hi) 0%,
+    var(--glass-edge) 26%,
+    var(--glass-edge-lo) 58%,
+    var(--glass-edge) 100%
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+.pane--soft {
+  border-radius: var(--radius-xl);
+}
+.pane--quiet {
+  background-color: var(--glass-1);
+  box-shadow: none;
+}
+
+/* A pane that reacts to the pointer. The lift is small on purpose — 2px and a
+   brighter edge is enough to register; more of it turns a page of panes into a
+   page of buttons. */
+.pane--hover {
+  transition:
+    transform var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out),
+    box-shadow var(--dur-short) var(--ease-out);
+}
+@media (hover: hover) {
+  .pane--hover:hover {
+    transform: translateY(-2px);
+    background-color: var(--glass-3);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+/* Safari before 18 and Firefox with backdrop-filter disabled get no blur, so a
+   5% white pane over the backdrop would be unreadable. Trade the blur for an
+   opaque surface rather than shipping low-contrast text. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .pane {
+    background-color: color-mix(in srgb, var(--surface) 92%, white);
+  }
+  .pane--quiet {
+    background-color: var(--paper-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pane--hover {
+    transition: none;
+  }
+  .pane--hover:hover {
+    transform: none;
+  }
 }
 
 /* ========================================================================
@@ -122,18 +234,24 @@ svg {
 }
 
 .shell--narrow {
-  max-width: 62rem;
+  max-width: 60rem;
 }
 
-.stack {
-  display: grid;
-  gap: var(--space-md);
+/* The vertical rhythm between major sections. One class, so the gap is the
+   same number everywhere and changing it is one edit. `.feature` carries the
+   same value of its own, since it also needs it between the two columns. */
+.band {
+  padding-block: var(--space-2xl);
 }
+
+/* ========================================================================
+   Type utilities
+   ===================================================================== */
 
 .mono {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
 .tnum {
@@ -141,41 +259,66 @@ svg {
 }
 
 .muted {
-  color: var(--color-muted);
+  color: var(--ink-3);
 }
 
 .lede {
   font-size: var(--text-md);
-  line-height: 1.55;
-  color: var(--color-ink-2);
-  max-width: 46ch;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 48ch;
 }
 
-.rule {
-  height: var(--rule-hair);
-  background: var(--color-rule);
-  border: 0;
-  margin: 0;
+/* The accent-tinted run inside a headline. The gradient is two steps of one
+   hue, not two hues — it reads as light falling across the words rather than
+   as a colour effect. */
+.hl {
+  background: linear-gradient(104deg, var(--accent-2) 0%, var(--accent) 64%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  /* Descenders get clipped by background-clip on some engines without this. */
+  padding-inline-end: 0.06em;
 }
 
-/* Section head — S2 Hanging. Single column always; heading directly under
-   nothing (no eyebrow). Gate 52 / 54 safe. */
-.head-hang {
-  display: grid;
-  gap: var(--space-md);
-  padding-block: var(--space-3xl) var(--space-xl);
-  max-width: 34ch;
+
+/* A typographic link: the arrow slides, the rule under it brightens. */
+.tlink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: fit-content;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding-block-end: 2px;
+  border-block-end: 1px solid rgb(var(--accent-rgb) / 28%);
+  transition:
+    border-color var(--dur-short) var(--ease-out),
+    gap var(--dur-short) var(--ease-out);
 }
-.head-hang h2 {
-  font-size: var(--text-2xl);
+.tlink > span {
+  transition: transform var(--dur-short) var(--ease-out);
 }
-.head-hang p {
-  color: var(--color-muted);
-  max-width: 46ch;
+.tlink:hover {
+  border-block-end-color: var(--accent);
+}
+.tlink:hover > span {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tlink,
+  .tlink > span {
+    transition: none;
+  }
+  .tlink:hover > span {
+    transform: none;
+  }
 }
 
 /* ========================================================================
-   Buttons — 8 states
+   Buttons
    ===================================================================== */
 
 .btn {
@@ -183,363 +326,464 @@ svg {
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  min-height: 44px;
-  padding: var(--space-sm) var(--space-lg);
+  min-block-size: 2.625rem;
+  padding: 0 var(--space-lg);
+  border: 0;
+  border-radius: var(--radius-pill);
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-weight: 560;
+  letter-spacing: -0.005em;
   white-space: nowrap;
-  border: var(--rule-hair) solid transparent;
-  border-radius: var(--radius-pill);
   cursor: pointer;
   transition:
+    transform var(--dur-micro) var(--ease-out),
     background-color var(--dur-short) var(--ease-out),
-    border-color var(--dur-short) var(--ease-out),
-    color var(--dur-short) var(--ease-out),
-    transform 100ms var(--ease-out);
-}
-
-.btn--accent {
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
-}
-.btn--accent:hover {
-  background: var(--color-accent-2);
-}
-
-.btn--ghost {
-  background: transparent;
-  color: var(--color-ink);
-  border-color: var(--color-rule);
-}
-/* One signal per hover — the outline brightens, nothing else moves. */
-.btn--ghost:hover {
-  border-color: var(--color-ink);
-}
-
-.btn--text {
-  background: transparent;
-  color: var(--color-ink-2);
-  padding-inline: var(--space-sm);
-}
-.btn--text:hover {
-  color: var(--color-ink);
+    box-shadow var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
 }
 
 .btn:active {
   transform: translateY(1px);
 }
-.btn[disabled],
-.btn[aria-disabled="true"] {
-  opacity: 0.45;
-  cursor: not-allowed;
-  pointer-events: none;
+
+.btn--accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+  /* The inset top highlight is what keeps a flat fill from looking like a
+     rectangle of colour next to all the glass. The shadow underneath is
+     neutral: a coloured one reads as the button glowing. */
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 30%),
+    0 1px 2px rgb(0 0 0 / 30%);
+}
+.btn--accent:hover {
+  background: var(--accent-2);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 34%),
+    0 1px 2px rgb(0 0 0 / 30%);
 }
 
-/* C3 typographic link CTA — underline solid, thickens on hover, arrow → */
-.tlink {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.4em;
-  white-space: nowrap;
-  color: var(--color-accent);
-  font-weight: 500;
-  padding-block-end: 2px;
-  border-block-end: 1px solid var(--color-accent-2);
-  transition:
-    border-color var(--dur-short) var(--ease-out),
-    color var(--dur-short) var(--ease-out);
+/* The glass button. Same material as a pane, at button scale. */
+.btn--glass {
+  position: relative;
+  background-color: var(--glass-2);
+  background-image: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 7%) 0%,
+    rgb(255 255 255 / 0%) 60%
+  );
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  color: var(--ink);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--shadow-pane);
 }
-.tlink:hover {
-  color: var(--color-ink);
-  border-block-end-color: var(--color-ink);
-}
-.tlink:active {
-  transform: translateY(1px);
+.btn--glass:hover {
+  background-color: var(--glass-3);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge-hi),
+    var(--shadow-pane);
 }
 
-/* Prose links */
-.prose a:not(.btn):not(.tlink) {
-  color: var(--color-accent);
-  border-block-end: 1px solid var(--color-rule);
-  transition: border-color var(--dur-short) var(--ease-out);
+.btn--text {
+  background: transparent;
+  color: var(--ink-2);
+  padding-inline: var(--space-md);
 }
-.prose a:not(.btn):not(.tlink):hover {
-  border-block-end-color: var(--color-accent);
+.btn--text:hover {
+  color: var(--ink);
+  background: var(--glass-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition-property: background-color, color;
+  }
+  .btn:active {
+    transform: none;
+  }
 }
 
 /* ========================================================================
-   Nav — N1b canonical three-section
+   Chips and tags
+   ===================================================================== */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--glass-1);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.chip::before {
+  content: "";
+  inline-size: 4px;
+  block-size: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.7;
+  flex: none;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-xs);
+  background: var(--glass-2);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  color: var(--ink-3);
+  white-space: nowrap;
+  vertical-align: 2px;
+}
+
+/* The status colours are the editor's, fixed across its themes — so green
+   means the same thing here as it does in the tool. */
+.tag--ok {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ok) 30%, transparent);
+}
+.tag--pending {
+  color: var(--pending);
+  background: color-mix(in srgb, var(--pending) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pending) 30%, transparent);
+}
+.tag--accent {
+  color: var(--accent);
+  background: var(--accent-wash);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 28%);
+}
+
+/* ========================================================================
+   Nav — a floating glass bar
    ===================================================================== */
 
 .nav {
   position: fixed;
-  inset: 0 0 auto;
+  inset-block-start: 0;
+  inset-inline: 0;
   z-index: var(--z-sticky);
-  background: transparent;
-  border-block-end: var(--rule-hair) solid transparent;
-  transition:
-    background-color var(--dur-short) var(--ease-out),
-    border-color var(--dur-short) var(--ease-out);
-}
-.nav.is-scrolled {
-  background: color-mix(in oklch, var(--color-paper) 78%, transparent);
-  backdrop-filter: blur(18px) saturate(150%);
-  border-block-end-color: var(--color-rule);
+  padding-block-start: var(--space-sm);
+  padding-inline: var(--page-gutter);
+  /* The bar itself is the pane; this wrapper only positions it, so it must not
+     intercept clicks on the page either side of the bar. */
+  pointer-events: none;
 }
 
 .nav__inner {
-  max-width: var(--page-max);
-  margin-inline: auto;
-  padding-inline: var(--page-gutter);
-  min-height: 68px;
+  pointer-events: auto;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-md);
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  min-block-size: var(--nav-h);
+  padding-inline: var(--space-sm) var(--space-xs);
+  border-radius: var(--radius-pill);
+  /* Starts invisible over the hero and fades in on scroll — the bar should not
+     draw a line across the headline. */
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  transition:
+    background-color var(--dur-mid) var(--ease-out),
+    box-shadow var(--dur-mid) var(--ease-out),
+    backdrop-filter var(--dur-mid) var(--ease-out);
+}
+
+.nav.is-scrolled .nav__inner {
+  background-color: var(--glass-2);
+  background-image: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 6%) 0%,
+    rgb(255 255 255 / 0%) 70%
+  );
+  backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-sat));
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--shadow-pane);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav.is-scrolled .nav__inner {
+    background-color: color-mix(in srgb, var(--surface) 94%, white);
+  }
 }
 
 .nav__brand {
-  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
+  padding-inline: var(--space-xs);
   font-family: var(--font-display);
-  font-weight: 800;
   font-size: var(--text-md);
-  letter-spacing: -0.04em;
-  white-space: nowrap;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  color: var(--ink);
 }
+
 .nav__brand img {
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-pill);
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: var(--radius-xs);
 }
 
 .nav__center {
-  justify-self: center;
-  display: flex;
-  align-items: center;
+  display: none;
+  justify-content: center;
   gap: var(--space-2xs);
+}
+
+@media (min-width: 56rem) {
+  .nav__center {
+    display: flex;
+  }
 }
 
 .nav__link {
-  display: inline-block;
-  padding: var(--space-xs) var(--space-sm);
+  position: relative;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-pill);
   font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-ink-2);
-  white-space: nowrap;
-  border-radius: var(--radius-sm);
-  transition: color var(--dur-short) var(--ease-out);
+  font-weight: 480;
+  color: var(--ink-3);
+  transition:
+    color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
 }
 .nav__link:hover {
-  color: var(--color-ink);
-}
-.nav__link:active {
-  color: var(--color-accent-2);
+  color: var(--ink);
+  background: var(--glass-1);
 }
 .nav__link[aria-current="page"] {
-  color: var(--color-accent);
+  color: var(--ink);
+  background: var(--glass-2);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
 }
 
 .nav__right {
-  justify-self: end;
   display: flex;
   align-items: center;
   gap: var(--space-2xs);
+  justify-self: end;
+}
+
+/* GitHub link and the CTA both fold away on small screens; the sheet carries
+   them instead, so the bar stays a brand plus one control. */
+.nav__right .btn--text,
+.nav__right .btn--accent {
+  display: none;
+}
+
+@media (min-width: 42rem) {
+  .nav__right .btn--accent {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 56rem) {
+  .nav__right .btn--text {
+    display: inline-flex;
+  }
 }
 
 .nav__toggle {
-  display: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  background: transparent;
-  border: var(--rule-hair) solid var(--color-rule);
-  border-radius: var(--radius-sm);
-  color: var(--color-ink);
+  inline-size: 2.375rem;
+  block-size: 2.375rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--glass-2);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  color: var(--ink-2);
   cursor: pointer;
-  transition: border-color var(--dur-short) var(--ease-out);
+  transition:
+    color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
 }
 .nav__toggle:hover {
-  border-color: var(--color-ink);
-}
-.nav__toggle:active {
-  transform: translateY(1px);
-}
-.nav__toggle[disabled] {
-  opacity: 0.45;
-  cursor: not-allowed;
+  color: var(--ink);
+  background: var(--glass-3);
 }
 
-.nav__sheet {
-  display: none;
-  padding: var(--space-md) var(--page-gutter) var(--space-lg);
-  border-block-start: var(--rule-hair) solid var(--color-rule);
-  background: var(--color-paper);
+@media (min-width: 56rem) {
+  .nav__toggle {
+    display: none;
+  }
 }
-.nav__sheet.is-open {
+
+/* The mobile sheet. Collapsed by max-block-size rather than display:none so
+   it can animate, and inert while closed so a hidden link can't take focus. */
+.nav__sheet {
+  pointer-events: auto;
   display: grid;
   gap: var(--space-2xs);
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  margin-block-start: var(--space-xs);
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-lg);
+  background-color: var(--glass-2);
+  backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-sat));
+  box-shadow: inset 0 0 0 1px var(--glass-edge), var(--shadow-pane);
+  max-block-size: 0;
+  opacity: 0;
+  overflow: hidden;
+  visibility: hidden;
+  transition:
+    max-block-size var(--dur-mid) var(--ease-out),
+    opacity var(--dur-short) var(--ease-out),
+    padding var(--dur-mid) var(--ease-out),
+    visibility 0s linear var(--dur-mid);
 }
+
+.nav__sheet.is-open {
+  max-block-size: 24rem;
+  opacity: 1;
+  visibility: visible;
+  padding: var(--space-xs);
+  transition-delay: 0s, 0s, 0s, 0s;
+}
+
 .nav__sheet .nav__link {
-  padding: var(--space-sm) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
   font-size: var(--text-base);
 }
 
-@media (max-width: 60rem) {
-  /* Centre cluster is gone — collapse the three-up grid to two so the brand
-     and the action cluster can't overlap. */
-  .nav__inner {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-sm);
-  }
-  .nav__center {
-    display: none;
-  }
-  .nav__toggle {
-    display: inline-flex;
-  }
-  .nav__right .btn--text {
+@media (min-width: 56rem) {
+  .nav__sheet {
     display: none;
   }
 }
 
-@media (max-width: 26rem) {
-  /* Shorten the label rather than let it crowd the toggle. */
-  .nav__right .btn--accent {
-    padding-inline: var(--space-md);
+@media (prefers-reduced-motion: reduce) {
+  .nav__inner,
+  .nav__sheet {
+    transition: none;
   }
 }
 
 /* ========================================================================
-   Hero — H2 Split Diptych, 7/5, code column right
+   Hero
    ===================================================================== */
 
-/* Bottom padding is 1.5× the top (the 68px is the fixed nav's offset, not
-   breathing room) so the hero settles into the page rather than floating. */
 .hero {
-  padding-block: calc(68px + var(--space-3xl)) var(--space-4xl);
+  padding-block: clamp(var(--space-2xl), 9vh, var(--space-4xl)) var(--space-3xl);
 }
 
 .hero__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2xl);
   align-items: center;
 }
 
 @media (min-width: 62rem) {
   .hero__grid {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: var(--space-3xl);
+    /* 7/5 — the code column needs enough width to hold 46 characters without
+       wrapping, and the prose column needs to stay under its measure. */
+    grid-template-columns: 7fr 5fr;
+    gap: var(--space-xl);
   }
 }
 
 .hero__title {
+  margin-block: var(--space-md) 0;
   font-size: var(--text-display);
-  max-width: 13ch;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
 }
 
 .hero__lede {
   margin-block-start: var(--space-lg);
+  font-size: var(--text-md);
+  max-width: 44ch;
 }
 
 .hero__actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: var(--space-sm);
   margin-block-start: var(--space-xl);
 }
 
-/* A real list — the accent dot is its marker, not an ornament. */
-.hero__meta {
-  list-style: none;
-  margin: var(--space-xl) 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs) var(--space-md);
-  color: var(--color-muted);
-}
-.hero__meta li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
-}
-.hero__dot {
-  width: 5px;
-  height: 5px;
-  border-radius: var(--radius-pill);
-  background: var(--color-accent);
-  flex: none;
-}
 
 /* ========================================================================
-   Code block — typographic frame, no re-drawn window chrome
+   Code block
    ===================================================================== */
 
 .code {
-  border: var(--rule-hair) solid var(--color-rule);
-  border-radius: var(--radius-md);
-  background: var(--color-paper-2);
   overflow: hidden;
+  border-radius: var(--radius-lg);
 }
 
 .code__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-md);
-  border-block-end: var(--rule-hair) solid var(--color-rule);
+  border-block-end: 1px solid var(--rule-soft);
 }
 
 .code__label {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-muted);
-  white-space: nowrap;
+  color: var(--ink-4);
 }
 
 .code__copy {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding-inline: var(--space-sm);
+  padding: var(--space-2xs) var(--space-sm);
+  border: 0;
+  border-radius: var(--radius-xs);
   background: transparent;
-  border: var(--rule-hair) solid var(--color-rule);
-  border-radius: var(--radius-sm);
-  color: var(--color-ink-2);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  letter-spacing: 0.06em;
-  white-space: nowrap;
+  color: var(--ink-3);
   cursor: pointer;
   transition:
     color var(--dur-short) var(--ease-out),
-    border-color var(--dur-short) var(--ease-out);
+    background-color var(--dur-short) var(--ease-out);
 }
 .code__copy:hover {
-  color: var(--color-ink);
-  border-color: var(--color-muted);
-}
-.code__copy:active {
-  transform: translateY(1px);
-}
-.code__copy[disabled] {
-  opacity: 0.45;
-  cursor: not-allowed;
+  color: var(--ink);
+  background: var(--glass-2);
 }
 .code__copy[data-state="copied"] {
-  color: var(--color-accent);
-  border-color: var(--color-accent-2);
+  color: var(--ok);
 }
 
 .code__body {
@@ -548,319 +792,278 @@ svg {
   overflow-x: auto;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  line-height: 1.75;
-  color: var(--color-ink-2);
-  -webkit-overflow-scrolling: touch;
-}
-.code__body code {
-  font-family: inherit;
-}
-.code__prompt {
-  color: var(--color-accent);
-  user-select: none;
-}
-.code__comment {
-  color: var(--color-neutral);
+  line-height: 1.85;
+  color: var(--ink-2);
+  tab-size: 2;
 }
 
-/* Markdown-rendered code (Shiki). Shiki emits no font-family, so without
-   this the <pre> falls back to the UA monospace — a fourth family. */
-.prose pre,
+.code__body code {
+  font: inherit;
+}
+
+.code__prompt {
+  color: var(--accent);
+  user-select: none;
+}
+
+.code__comment {
+  color: var(--ink-4);
+}
+
+/* Shiki emits its own colours on markdown code blocks; the frame around them
+   is ours. */
+.prose pre {
+  margin: 0;
+  padding: var(--space-md) var(--space-lg);
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: rgb(0 0 0 / 28%) !important;
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  font-size: var(--text-sm);
+  line-height: 1.75;
+}
+
 .prose pre code {
   font-family: var(--font-mono);
+  font-size: inherit;
 }
-.prose pre {
-  padding: var(--space-md);
-  border: var(--rule-hair) solid var(--color-rule);
-  border-radius: var(--radius-md);
-  overflow-x: auto;
-  font-size: var(--text-sm);
-  line-height: 1.7;
-}
+
 .prose :not(pre) > code {
-  font-family: var(--font-mono);
-  font-size: 0.875em;
   padding: 0.15em 0.4em;
   border-radius: var(--radius-xs);
-  background: var(--color-paper-2);
-  color: var(--color-ink);
+  background: var(--glass-2);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  color: var(--ink);
 }
 
 /* ========================================================================
-   Split Studio — alternating diptychs
+   Pillars — the three-up card band
    ===================================================================== */
 
-.split {
+.pillars__head {
+  font-size: var(--text-2xl);
+  margin-block-end: var(--space-xl);
+  max-width: 20ch;
+}
+
+.pillars {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 46rem) {
+  .pillars {
+    /* auto-fit, so the band stays right if you add a fourth card or drop to
+       two — the cards rebalance instead of leaving a hole. */
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+}
+
+.pillar {
+  display: grid;
+  align-content: start;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* 16/10 matches both source captures closely (1.60 and 1.68), so `cover`
+   trims a few pixels rather than cropping anything out of the frame. The
+   images sit edge to edge — the card is the frame. */
+.pillar__img {
+  inline-size: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: center;
+  border-block-end: 1px solid var(--rule-soft);
+  /* The captures are transparent at the corners; without this the page
+     shows through and the card looks like it has a hole in it. */
+  background: var(--paper-2);
+}
+
+.pillar__text {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+}
+
+.pillar h3 {
+  font-size: var(--text-md);
+  letter-spacing: -0.015em;
+}
+
+.pillar p {
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+  max-width: 34ch;
+}
+
+/* ========================================================================
+   Features — alternating text / proof
+   ===================================================================== */
+
+.feature {
+  display: grid;
   gap: var(--space-xl);
   padding-block: var(--space-2xl);
-  border-block-start: var(--rule-hair) solid var(--color-rule-2);
+  align-items: center;
 }
 
 @media (min-width: 62rem) {
-  .split {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  .feature {
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-3xl);
-    padding-block: var(--space-3xl);
-    align-items: start;
   }
-  /* Alternate direction: even rows put the proof column on the left. */
-  .split--flip .split__text {
+  /* Flipping with `order` rather than two column templates keeps the DOM in
+     reading order, which is also the order a screen reader gets. */
+  .feature--flip .feature__text {
     order: 2;
-  }
-  .split--flip .split__proof {
-    order: 1;
   }
 }
 
-.split__text h2 {
-  font-size: var(--text-xl);
-  max-width: 16ch;
-}
-.split__text p {
+.feature__text > * + * {
   margin-block-start: var(--space-md);
-  color: var(--color-ink-2);
-  max-width: 48ch;
 }
-.split__text .tlink {
+
+.feature__text h2 {
+  font-size: var(--text-2xl);
+}
+
+.feature__text p {
+  color: var(--ink-2);
+  max-width: 46ch;
+}
+
+.feature--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.feature--wide .feature__text p {
+  max-width: var(--measure);
+}
+
+.feature__text .tlink {
   margin-block-start: var(--space-lg);
 }
 
-.split__proof {
+.feature__proof {
   display: grid;
-  gap: var(--space-sm);
-  align-content: start;
+  gap: var(--space-md);
 }
 
-/* Provenance line under a proof figure — where the claim is tracked. */
-.split__note {
+.feature__note {
   font-size: var(--text-sm);
-  color: var(--color-muted);
-  max-width: 48ch;
+  color: var(--ink-3);
+  max-width: 44ch;
 }
 
-/* Proof row — hairline list, no cards, no icons */
-.proof-row {
+/* The little spec table inside a proof pane. */
+.rows {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  padding: var(--space-xs) var(--space-lg);
+}
+
+.row {
+  display: grid;
   gap: var(--space-2xs);
   padding-block: var(--space-md);
-  border-block-start: var(--rule-hair) solid var(--color-rule-2);
+  border-block-start: 1px solid var(--rule-soft);
 }
-.proof-row:first-child {
+.row:first-child {
   border-block-start: 0;
-  padding-block-start: 0;
-}
-/* Editorial label, not machine text — stays on the body face. The mono
-   outlier is reserved for identifiers, commands and numerals. */
-.proof-row__k {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-}
-.proof-row__v {
-  color: var(--color-ink-2);
-  font-size: var(--text-sm);
-  line-height: 1.6;
 }
 
-.tag {
-  display: inline-block;
-  padding: 0.15em 0.55em;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-  border: var(--rule-hair) solid var(--color-rule);
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
-}
-.tag--live {
-  color: var(--color-accent);
-  border-color: var(--color-accent-2);
+@media (min-width: 34rem) {
+  .row {
+    grid-template-columns: 7rem 1fr;
+    gap: var(--space-md);
+    align-items: baseline;
+  }
 }
 
-/* ========================================================================
-   F3 Tabular spec sheet
-   ===================================================================== */
-
-.spec {
-  width: 100%;
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
-  text-align: start;
-}
-.spec caption {
-  text-align: start;
-  color: var(--color-muted);
-  font-size: var(--text-sm);
-  padding-block-end: var(--space-md);
-}
-.spec th,
-.spec td {
-  padding: var(--space-md) var(--space-md) var(--space-md) 0;
-  border-block-start: var(--rule-hair) solid var(--color-rule-2);
-  vertical-align: baseline;
-  text-align: start;
-  font-weight: 400;
-}
-.spec thead th {
-  border-block-start: 0;
-  padding-block: 0 var(--space-sm);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-.spec tbody th {
+.row__k {
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--color-ink);
-  white-space: nowrap;
-}
-.spec td {
-  color: var(--color-ink-2);
-  font-size: var(--text-sm);
-}
-.spec td:last-child,
-.spec th:last-child {
-  padding-inline-end: 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
 }
 
-.spec-scroll {
-  overflow-x: auto;
-}
-
-@media (max-width: 46rem) {
-  .spec,
-  .spec tbody,
-  .spec tr,
-  .spec th,
-  .spec td {
-    display: block;
-    width: 100%;
-  }
-  .spec thead {
-    display: none;
-  }
-  .spec tr {
-    padding-block: var(--space-md);
-    border-block-start: var(--rule-hair) solid var(--color-rule-2);
-  }
-  .spec th,
-  .spec td {
-    border: 0;
-    padding: 0 0 var(--space-2xs);
-  }
+.row__v {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
 }
 
 /* ========================================================================
-   Screenshot slots — see components/Shot.astro
-   No browser chrome, no device frame, no tilt. A hairline figure only.
+   Screenshots
    ===================================================================== */
 
 .shot {
   margin: 0;
   display: grid;
   gap: var(--space-sm);
-  min-width: 0;
 }
 
-.shot__img,
-.shot__slot {
-  width: 100%;
-  border-radius: var(--radius-md);
-}
-
-/* No border. A real capture is dark UI on a dark canvas — it sits in the page
-   on its own, and a hairline would only re-introduce the frame. */
+/* No frame, no background, no radius. The captures are window grabs that
+   carry their own rounded corners, transparency and drop shadow — anything
+   drawn behind one reads as a second rectangle with the wrong corners. */
 .shot__img {
-  object-fit: cover;
-  display: block;
+  inline-size: 100%;
+  block-size: auto;
 }
 
-/* The empty state is a soft lift in the surface, not a box. The radial falls
-   all the way back to paper before it reaches an edge, so there is no seam —
-   the slot dissolves outward instead of stopping. */
 .shot__slot {
   display: grid;
   place-items: center;
-  padding: var(--space-lg);
-  /* Every edge must land on paper, or a seam appears. With a centre at 50% 48%
-     and radii of 76% × 60%, the side edges sit at 50/76 = 66% along the
-     gradient and the top edge at 48/60 = 80% — so the paper stop goes at 64%,
-     just inside the nearest of them. The core holds paper-3 flat to 16% so a
-     1152 px-wide plate still reads as a reserved region rather than as empty
-     page; a pure falloff with no flat core disappears at that size. */
-  background: radial-gradient(
-    76% 60% at 50% 48%,
-    var(--color-paper-3) 0% 16%,
-    var(--color-paper-2) 42%,
-    var(--color-paper) 64%
-  );
-}
-
-/* Type sits directly on the surface — no plate, no rule. */
-.shot__slot-inner {
-  display: grid;
-  gap: var(--space-2xs);
-  justify-items: center;
+  inline-size: 100%;
+  border-radius: var(--radius-md);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      var(--rule-soft) 0 1px,
+      transparent 1px 11px
+    ),
+    var(--paper-2);
   text-align: center;
-  max-width: 100%;
+  padding: var(--space-xl);
 }
 
-/* Quiet on purpose. This is a temporary note to the person building the site,
-   not content — at display weight it read louder than the copy around it. */
 .shot__slot-name {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  line-height: 1.35;
-  color: var(--color-muted);
-  overflow-wrap: anywhere;
-  min-width: 0;
+  font-family: var(--font-display);
+  font-weight: 560;
+  color: var(--ink-2);
 }
 
 .shot__slot-hint {
+  margin-block-start: var(--space-2xs);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.06em;
-  color: var(--color-neutral);
+  color: var(--ink-4);
 }
 
 .shot__cap {
-  font-size: var(--text-sm);
-  color: var(--color-muted);
+  padding-inline: var(--space-2xs);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-4);
 }
 
-/* Showcase — one wide plate, then an uneven pair. Never three equal cards. */
+/* ========================================================================
+   Showcase
+   ===================================================================== */
+
 .showcase {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-lg);
-  padding-block-end: var(--space-2xl);
 }
 
-@media (min-width: 56rem) {
-  .showcase {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: var(--space-xl);
-  }
-  .showcase > :first-child {
-    grid-column: 1 / -1;
-  }
-  /* With exactly two shots there is no pair to balance, so the second one
-     steps into the narrow right column instead of sitting left with a hole
-     beside it — a deliberate offset rather than a gap. A third shot restores
-     the 7/5 pair automatically. */
-  .showcase:has(> :last-child:nth-child(2)) > :nth-child(2) {
-    grid-column: 2;
-  }
+.showcase__head {
+  font-size: var(--text-2xl);
 }
 
 /* ========================================================================
@@ -871,95 +1074,95 @@ svg {
   display: grid;
   gap: var(--space-lg);
   padding: var(--space-xl);
-  margin-block: var(--space-3xl);
-  background: var(--color-paper-2);
-  border: var(--rule-hair) solid var(--color-rule);
-  border-radius: var(--radius-md);
 }
+
 @media (min-width: 52rem) {
   .status {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
     gap: var(--space-2xl);
-    align-items: center;
     padding: var(--space-2xl);
   }
 }
+
 .status h2 {
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
 }
-.status p {
-  color: var(--color-ink-2);
-  max-width: 52ch;
+
+.status__body {
+  display: grid;
+  gap: var(--space-md);
 }
-.status p + p {
-  margin-block-start: var(--space-md);
+
+.status__body p {
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+
+.status__body a {
+  color: var(--accent);
+  border-block-end: 1px solid rgb(var(--accent-rgb) / 28%);
+  transition: border-color var(--dur-short) var(--ease-out);
+}
+.status__body a:hover {
+  border-block-end-color: var(--accent);
 }
 
 /* ========================================================================
-   Final CTA
+   Closer
    ===================================================================== */
 
 .closer {
-  padding-block: var(--space-3xl);
-  border-block-start: var(--rule-hair) solid var(--color-rule-2);
   display: grid;
+  justify-items: center;
   gap: var(--space-lg);
-  justify-items: start;
+  padding: var(--space-3xl) var(--space-xl);
+  margin-block: var(--space-2xl);
+  text-align: center;
 }
+
 .closer h2 {
-  font-size: var(--text-2xl);
-  max-width: 18ch;
+  font-size: var(--text-display-s);
+  max-width: 24ch;
 }
+
 .closer p {
-  color: var(--color-muted);
-  max-width: 48ch;
+  color: var(--ink-2);
+  max-width: 52ch;
+}
+
+.closer code {
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-xs);
+  background: var(--glass-2);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
 }
 
 /* ========================================================================
-   Footer — Ft5 Statement
+   Footer
    ===================================================================== */
 
 .foot {
-  padding-block: var(--space-3xl) var(--space-xl);
-  padding-inline: var(--page-gutter);
-  max-width: var(--page-max);
-  margin-inline: auto;
+  margin-block-start: var(--space-2xl);
+  padding-block: var(--space-2xl) var(--space-xl);
+  border-block-start: 1px solid var(--rule-soft);
+  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 24%));
 }
 
-.foot__line {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.75rem, 5vw, 3rem);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  max-width: 38ch;
-  overflow-wrap: anywhere;
+.foot__inner {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
 }
+
 
 .foot__meta {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-md);
-  margin-block-start: var(--space-2xl);
-  padding-block-start: var(--space-md);
-  border-block-start: var(--rule-hair) solid var(--color-rule);
-}
-
-.foot__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-md);
-}
-.foot__link {
-  font-size: var(--text-sm);
-  color: var(--color-muted);
-  white-space: nowrap;
-  transition: color var(--dur-short) var(--ease-out);
-}
-.foot__link:hover {
-  color: var(--color-ink);
+  align-items: center;
+  gap: var(--space-md) var(--space-lg);
 }
 
 .foot__brand {
@@ -967,420 +1170,602 @@ svg {
   align-items: center;
   gap: var(--space-xs);
   font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.04em;
+  font-weight: 620;
+  letter-spacing: -0.02em;
 }
+
 .foot__brand img {
-  width: 22px;
-  height: 22px;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: var(--radius-xs);
+}
+
+.foot__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-inline-end: auto;
+}
+
+.foot__link {
+  font-size: var(--text-sm);
+  color: var(--ink-3);
+  transition: color var(--dur-short) var(--ease-out);
+}
+.foot__link:hover {
+  color: var(--ink);
+}
+
+.foot__legal {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-4);
 }
 
 /* ========================================================================
-   Page header (interior pages)
+   Page head — the title block on inner pages
    ===================================================================== */
 
 .page-head {
-  padding-block: calc(68px + var(--space-2xl)) var(--space-xl);
   display: grid;
   gap: var(--space-md);
-  border-block-end: var(--rule-hair) solid var(--color-rule-2);
+  padding-block: var(--space-2xl) var(--space-xl);
+  max-width: var(--measure);
 }
+
 .page-head h1 {
-  font-size: var(--text-3xl);
-  max-width: 16ch;
+  font-size: var(--text-display-s);
+  letter-spacing: -0.03em;
 }
+
 .page-head p {
-  color: var(--color-ink-2);
-  max-width: 56ch;
+  color: var(--ink-2);
   font-size: var(--text-md);
 }
+
 .page-head p.mono {
   font-size: var(--text-sm);
+  color: var(--ink-4);
+}
+
+.page-head code {
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-xs);
+  background: var(--glass-2);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
 }
 
 /* ========================================================================
-   Prose (docs + blog body)
+   Prose — rendered markdown
    ===================================================================== */
 
 .prose {
   max-width: var(--measure);
-  color: var(--color-ink-2);
-  line-height: 1.7;
+  color: var(--ink-2);
+  font-size: var(--text-base);
 }
+
 .prose > * + * {
   margin-block-start: var(--space-md);
 }
+
 .prose h2 {
-  font-size: var(--text-xl);
-  color: var(--color-ink);
   margin-block-start: var(--space-2xl);
+  font-size: var(--text-xl);
+  color: var(--ink);
 }
+
 .prose h3 {
-  font-size: var(--text-md);
-  color: var(--color-ink);
   margin-block-start: var(--space-xl);
+  font-size: var(--text-lg);
+  color: var(--ink);
 }
+
 .prose ul,
 .prose ol {
-  padding-inline-start: 1.2em;
+  margin-block: 0;
+  padding-inline-start: var(--space-lg);
   display: grid;
   gap: var(--space-xs);
 }
+
 .prose li::marker {
-  color: var(--color-neutral);
+  color: var(--ink-4);
 }
-.prose blockquote {
-  margin: 0;
-  padding-inline-start: var(--space-md);
-  border-inline-start: 2px solid var(--color-accent-2);
-  color: var(--color-ink);
+
+.prose a {
+  color: var(--accent);
+  border-block-end: 1px solid rgb(var(--accent-rgb) / 26%);
+  transition: border-color var(--dur-short) var(--ease-out);
 }
+.prose a:hover {
+  border-block-end-color: var(--accent);
+}
+
 .prose strong {
-  color: var(--color-ink);
+  color: var(--ink);
   font-weight: 600;
 }
-.prose hr {
-  border: 0;
-  border-block-start: var(--rule-hair) solid var(--color-rule);
-  margin-block: var(--space-xl);
-}
 
-/* Body images match the cover art: same radius, no border. Markdown wraps an
-   image in a <p>, so the rounding has to be set here rather than on a figure. */
-.prose img {
-  width: 100%;
+.prose blockquote {
+  margin: 0;
+  padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
-  background: var(--color-paper-2);
+  border-inline-start: 2px solid var(--accent);
+  background: var(--glass-1);
+  color: var(--ink-2);
 }
 
-/* A screenshot of a dense UI is unreadable at the 65ch measure, so body images
-   run wider than the text they sit in. They only ever grow rightwards into the
-   shell's spare width — never into the gutter — and the viewport clamp keeps
-   the overflow off-screen at any width. */
-@media (min-width: 52rem) {
-  .post-body img {
-    width: 52rem;
-    max-width: calc(100vw - 2 * var(--page-gutter));
-  }
+.prose hr {
+  margin-block: var(--space-xl);
+  border: 0;
+  border-block-start: 1px solid var(--rule-soft);
+}
+
+.prose img {
+  inline-size: 100%;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--rule-soft), var(--shadow-pane);
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.prose th,
+.prose td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: start;
+  border-block-end: 1px solid var(--rule-soft);
+}
+
+.prose th {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  font-weight: 400;
+}
+
+/* ---- Generated API reference ------------------------------------------
+   The one thing scripts/gen-api-docs.mjs emits that isn't plain prose: a
+   small pill naming what each member is. */
+
+.api-kind {
+  display: inline-block;
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-xs);
+  background: var(--glass-2);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.8;
+  color: var(--ink-4);
+}
+
+/* An API page is a long list of signatures, so its member headings sit
+   tighter than prose headings and lead with the monospace name. */
+.prose h3 code {
+  font-size: 0.95em;
 }
 
 /* ========================================================================
-   Docs shell — sidebar + body
+   Docs — rail + body
    ===================================================================== */
 
 .docs {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-xl);
-  padding-block: var(--space-xl) var(--space-3xl);
+  padding-block-end: var(--space-2xl);
 }
+
 @media (min-width: 62rem) {
   .docs {
     grid-template-columns: 15rem minmax(0, 1fr);
     gap: var(--space-3xl);
+    align-items: start;
   }
+
+  /* Clears the floating nav plus a little air. */
   .docs__rail {
     position: sticky;
-    top: calc(68px + var(--space-lg));
-    align-self: start;
-    max-height: calc(100dvh - 68px - var(--space-2xl));
-    overflow-y: auto;
+    inset-block-start: calc(var(--nav-h) + var(--space-lg));
   }
+}
+
+.docs__rail {
+  padding: var(--space-md);
+}
+
+.docs__rail-title {
+  padding: var(--space-2xs) var(--space-sm) var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
 }
 
 .docs__rail nav {
   display: grid;
-  gap: var(--space-2xs);
+  gap: var(--space-3xs);
 }
-.docs__rail-title {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-  padding-block-end: var(--space-xs);
-}
+
 .docs__rail a {
   padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
   font-size: var(--text-sm);
-  color: var(--color-ink-2);
-  border-inline-start: 2px solid var(--color-rule-2);
+  color: var(--ink-3);
   transition:
     color var(--dur-short) var(--ease-out),
-    border-color var(--dur-short) var(--ease-out);
+    background-color var(--dur-short) var(--ease-out);
 }
 .docs__rail a:hover {
-  color: var(--color-ink);
-  border-inline-start-color: var(--color-muted);
+  color: var(--ink);
+  background: var(--glass-1);
 }
 .docs__rail a[aria-current="page"] {
-  color: var(--color-accent);
-  border-inline-start-color: var(--color-accent);
+  color: var(--ink);
+  background: var(--accent-wash);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 22%);
 }
 
 .docs__foot {
-  margin-block-start: var(--space-2xl);
-  padding-block-start: var(--space-md);
-  border-block-start: var(--rule-hair) solid var(--color-rule);
-  font-size: var(--text-sm);
-  color: var(--color-muted);
-}
-
-/* ========================================================================
-   Roadmap — vertical timeline
-   The spine runs from the first node to the last; each phase hangs off it.
-   ===================================================================== */
-
-.timeline {
-  --tl-node: 0.75rem;
-  --tl-gutter: 2rem;
-  --tl-lead: var(--space-xl);
-
-  position: relative;
-  list-style: none;
-  margin: 0;
-  padding: var(--space-xl) 0 var(--space-3xl) var(--tl-gutter);
-}
-
-@media (min-width: 40rem) {
-  .timeline {
-    --tl-gutter: 2.75rem;
-  }
-}
-
-/* The spine — stops at the centre of the first and last node, so it never
-   dangles past the content. */
-.timeline::before {
-  content: "";
-  position: absolute;
-  inset-inline-start: calc(var(--tl-node) / 2 - 1px);
-  inset-block-start: calc(var(--space-xl) + var(--tl-lead) + var(--tl-node) / 2);
-  inset-block-end: calc(var(--space-3xl) + var(--tl-lead) + var(--tl-node) / 2);
-  width: 2px;
-  background: var(--color-rule);
-  border-radius: var(--radius-pill);
-}
-
-.phase {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-md);
-  padding-block: var(--tl-lead);
-}
-
-/* The node */
-.phase::before {
-  content: "";
-  position: absolute;
-  inset-inline-start: calc(var(--tl-gutter) * -1);
-  inset-block-start: calc(var(--tl-lead) + var(--space-xs));
-  width: var(--tl-node);
-  height: var(--tl-node);
-  border-radius: var(--radius-pill);
-  background: var(--color-paper);
-  border: 2px solid var(--color-rule);
-}
-
-/* Shipped phases get a filled node; the phase in flight gets a ring. */
-.phase--complete::before {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-}
-.phase--now::before {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px var(--color-paper-2);
-}
-
-@media (min-width: 56rem) {
-  .phase {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: var(--space-2xl);
-  }
-}
-
-.phase__id {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-sm);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-.phase--now .phase__id {
-  color: var(--color-accent);
-}
-
-.phase h2 {
-  font-size: var(--text-lg);
-  margin-block-start: var(--space-xs);
-  max-width: 20ch;
-}
-.phase__when {
-  margin-block-start: var(--space-xs);
-  font-size: var(--text-sm);
-  color: var(--color-neutral);
-}
-
-.phase__body p {
-  color: var(--color-ink-2);
-  max-width: 56ch;
-}
-
-.phase__items {
-  list-style: none;
-  margin: var(--space-md) 0 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-xs);
-}
-.phase__items li {
-  display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr);
-  gap: var(--space-xs);
-  align-items: baseline;
-  font-size: var(--text-sm);
-  color: var(--color-ink-2);
-}
-.phase__items .state {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-neutral);
-}
-.phase__items .state--done {
-  color: var(--color-accent);
-}
-.phase__items .done {
-  color: var(--color-muted);
+  gap: var(--space-lg);
+  justify-content: space-between;
+  margin-block-start: var(--space-2xl);
+  padding-block-start: var(--space-lg);
+  border-block-start: 1px solid var(--rule-soft);
 }
 
 /* ========================================================================
-   Blog index + post cover art
+   Roadmap — one line down the page, a milestone at each date
    ===================================================================== */
 
-/* Covers are borderless like .shot, for the same reason: a hairline would
-   re-draw a frame the reader's window already gives them. */
-.post-hero,
-.post-row__thumb {
-  width: 100%;
-  border-radius: var(--radius-md);
-  object-fit: cover;
-  background: var(--color-paper-2);
+.track {
+  position: relative;
+  margin: 0;
+  padding: 0 0 var(--space-2xl);
+  list-style: none;
+  /* The gap IS the stretch of bare line between milestones. */
+  display: grid;
+  gap: var(--space-2xl);
 }
 
-.post-hero {
-  margin-block-start: var(--space-xl);
-  aspect-ratio: 16 / 9;
+/* The line itself. Fades out at both ends rather than stopping on a hard
+   edge, so it reads as a track that continues past the page. */
+.track::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  /* Centres on the dot: half the 2.25rem gutter, minus half the 1px line. */
+  inset-inline-start: calc(1.125rem - 0.5px);
+  inline-size: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--rule) 6%,
+    var(--rule) 82%,
+    transparent 100%
+  );
 }
+
+.track__row {
+  position: relative;
+  padding-inline-start: 2.25rem;
+}
+
+/* ---- The dot on the line --------------------------------------------- */
+
+.ms__dot {
+  position: absolute;
+  inset-inline-start: calc(1.125rem - 4px);
+  inset-block-start: 0.5rem;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  /* The ring is the page colour, so the dot punches a hole in the line
+     instead of sitting on top of it. Both rings are zero-blur — a blurred
+     one would halo. */
+  box-shadow:
+    0 0 0 4px var(--paper),
+    0 0 0 5px rgb(var(--accent-rgb) / 30%);
+  transition: box-shadow var(--dur-short) var(--ease-out);
+}
+
+/* The open end: hollow, and no glow. Nothing has happened there yet. */
+.ms__dot--open {
+  background: var(--paper);
+  box-shadow:
+    0 0 0 4px var(--paper),
+    0 0 0 5px var(--rule);
+}
+
+/* ---- The expander ----------------------------------------------------- */
+
+.ms {
+  border-radius: var(--radius-md);
+}
+
+.ms__head {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-md);
+  padding: var(--space-2xs) 0;
+  cursor: pointer;
+  /* Kills the default triangle in every engine; the chevron replaces it. */
+  list-style: none;
+}
+.ms__head::-webkit-details-marker {
+  display: none;
+}
+
+.ms__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 620;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  transition: color var(--dur-short) var(--ease-out);
+}
+
+.ms:hover .ms__title,
+.ms__head:focus-visible .ms__title {
+  color: var(--accent);
+}
+
+.ms__when {
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+
+.ms__chev {
+  color: var(--ink-4);
+  align-self: center;
+  transition:
+    transform var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
+}
+
+.ms[open] .ms__chev {
+  transform: rotate(180deg);
+}
+
+.ms:hover .ms__chev {
+  color: var(--ink-2);
+}
+
+/* The one-liner spans the full row, under the title and date. */
+.ms__sum {
+  grid-column: 1 / -1;
+  font-size: var(--text-sm);
+  color: var(--ink-3);
+  max-width: 54ch;
+}
+
+/* ---- The expanded body ------------------------------------------------ */
+
+.ms__body {
+  display: grid;
+  gap: var(--space-md);
+  margin-block-start: var(--space-md);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--glass-1);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  animation: ms-open var(--dur-short) var(--ease-out);
+}
+
+@keyframes ms-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.ms__body p {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+
+.ms__body a {
+  color: var(--accent);
+  border-block-end: 1px solid rgb(var(--accent-rgb) / 28%);
+}
+.ms__body a:hover {
+  border-block-end-color: var(--accent);
+}
+
+.ms__points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.ms__points li {
+  position: relative;
+  padding-inline-start: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--ink-3);
+}
+
+.ms__points li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0.6em;
+  inline-size: 4px;
+  block-size: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.6;
+}
+
+/* ---- The open end ----------------------------------------------------- */
+
+.track__row--tail {
+  padding-block-start: var(--space-2xs);
+}
+
+.track__tail {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms__body {
+    animation: none;
+  }
+  .ms__chev {
+    transition: none;
+  }
+}
+
+/* ========================================================================
+   Post and doc index rows
+   ===================================================================== */
 
 .posts {
   display: grid;
-  gap: 0;
-  padding-block: var(--space-xl) var(--space-3xl);
+  gap: var(--space-sm);
+  padding-block-end: var(--space-2xl);
 }
 
 .post-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-xs);
-  padding-block: var(--space-xl);
-  border-block-start: var(--rule-hair) solid var(--color-rule-2);
+  padding: 0;
+  overflow: hidden;
 }
-@media (min-width: 52rem) {
-  .post-row {
-    grid-template-columns: 10rem minmax(0, 1fr);
-    gap: var(--space-xl);
-    align-items: baseline;
-  }
-}
-/* Text first, thumbnail on the trailing edge, so a row without a cover keeps
-   its title on exactly the same line as one with — the list still scans as a
-   single column of headings whether or not the field is set. */
+
 .post-row__link {
   display: grid;
   gap: var(--space-md);
+  padding: var(--space-lg);
+  align-items: center;
 }
-@media (min-width: 52rem) {
-  .post-row__link:has(.post-row__thumb) {
-    grid-template-columns: minmax(0, 1fr) 13rem;
+
+@media (min-width: 46rem) {
+  .post-row__link {
+    grid-template-columns: 6.5rem minmax(0, 1fr);
     gap: var(--space-xl);
-    align-items: start;
   }
-}
-.post-row__thumb {
-  aspect-ratio: 16 / 9;
+  .post-row--media .post-row__link {
+    grid-template-columns: 6.5rem minmax(0, 1fr) 11rem;
+  }
 }
 
 .post-row__date {
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--color-muted);
-  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xs);
+  color: var(--ink-4);
+  white-space: nowrap;
 }
+
+.post-row__text {
+  display: grid;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
 .post-row h2 {
-  font-size: var(--text-md);
-  max-width: 26ch;
+  font-size: var(--text-lg);
   transition: color var(--dur-short) var(--ease-out);
 }
-.post-row a:hover h2 {
-  color: var(--color-accent);
+
+.post-row__link:hover h2 {
+  color: var(--accent);
 }
+
 .post-row p {
-  margin-block-start: var(--space-xs);
-  color: var(--color-muted);
+  color: var(--ink-3);
   font-size: var(--text-sm);
-  max-width: 60ch;
+  max-width: 56ch;
+}
+
+.post-row__thumb {
+  inline-size: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+}
+
+.post-hero {
+  inline-size: 100%;
+  margin-block-end: var(--space-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 0 0 1px var(--rule-soft), var(--shadow-pane);
+}
+
+.post-body {
+  padding-block-end: var(--space-2xl);
 }
 
 .empty {
-  padding-block: var(--space-3xl);
   display: grid;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   justify-items: start;
+  padding: var(--space-2xl);
 }
+
 .empty h2 {
   font-size: var(--text-lg);
 }
+
 .empty p {
-  color: var(--color-muted);
-  max-width: 46ch;
+  color: var(--ink-3);
 }
+
+.empty code {
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-xs);
+  background: var(--glass-2);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
 /* ========================================================================
-   Page-load reveal — one orchestrated entrance, staggered by DOM index
+   Entrance reveal
    ===================================================================== */
 
+/* Staggered by `--i` on the element. Pure CSS, runs once on load, no observer
+   and no scroll listener — so it can't cause a layout thrash and it can't
+   leave content hidden if script fails. */
 .reveal {
-  opacity: 0;
-  transform: translateY(8px);
-  animation: reveal var(--dur-long) var(--ease-out) forwards;
-  animation-delay: calc(var(--i, 0) * 70ms);
+  animation: reveal var(--dur-long) var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms);
 }
 
 @keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(6px);
+  }
   to {
     opacity: 1;
     transform: none;
+    filter: blur(0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 150ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 150ms !important;
-  }
   .reveal {
-    transform: none;
-    animation: reveal-reduced 150ms linear forwards;
-  }
-  @keyframes reveal-reduced {
-    to {
-      opacity: 1;
-    }
+    animation: none;
   }
 }

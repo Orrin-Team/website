@@ -34,6 +34,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Runs before the build because `astro build` does not type-check: a
+      # template reading a field that a data file no longer has compiles fine
+      # and then throws at request time. Catching it here fails the deploy
+      # instead of shipping a page that crashes.
+      - name: Type-check
+        run: npm run check
+
       - name: Build
         env:
           SITE_URL: ${{ vars.SITE_URL }}

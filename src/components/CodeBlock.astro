@@ -1,13 +1,20 @@
 ---
-// Typographic code frame: label row + hairline + <pre>.
-// Deliberately NOT a re-drawn terminal window — no title bar, no traffic
-// lights. The user's terminal already is a terminal.
+/**
+ * A terminal block: label row, hairline, commands.
+ *
+ * Deliberately not a re-drawn terminal window — no title bar, no traffic
+ * lights. The reader's terminal already is a terminal.
+ *
+ * Lines starting with "#" render as comments and are left off the clipboard;
+ * everything else gets a prompt and gets copied.
+ */
 interface Props {
   label?: string;
   lines: string[];
   /** Lines beginning with "#" render as comments; others get a prompt. */
   prompt?: boolean;
 }
+
 const { label = "bash", lines, prompt = true } = Astro.props;
 
 const copyText = lines.filter((l) => l.trim() && !l.startsWith("#")).join("\n");
@@ -22,7 +29,7 @@ const PROMPT = "$ ";
 const NL = "\n";
 ---
 
-<div class="code">
+<div class="code pane">
   <div class="code__bar">
     <span class="code__label">{label}</span>
     <button

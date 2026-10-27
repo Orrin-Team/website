@@ -18,7 +18,7 @@ Everything else in this PR depends on this one, so it's worth explaining properl
 
 Before, a frame was hand-wired. Somebody had to know that this pass writes to that image, so this barrier goes here, with that layout transition, and those usage flags on the image at creation time. Every new pass meant editing that wiring by hand, and getting it wrong means a validation error at best and a corrupted frame or a device loss at worst.
 
-Now passes declare what they read and what they write in `frame::declare`, and the graph derives the rest execution order, image layouts, barriers, and `ImageUsage` flags. Nothing hand-wires a frame anymore. `frame.rs` is 1,423 lines and it is now the single definition of what a frame is in Orrin.
+Now passes declare what they read and what they write in `frame::declare`, and the graph derives the rest — execution order, image layouts, barriers, and `ImageUsage` flags. Nothing hand-wires a frame anymore. `frame.rs` is 1,423 lines and it is now the single definition of what a frame is in Orrin.
 
 The part I'm most pleased with is that the graph is device-free, meaning it can be compiled and inspected without a GPU. So CI asserts the whole barrier plan against a golden file - 2,738 lines describing 893 barriers. If a change to one pass silently reorders or drops a barrier somewhere else, the diff shows up in a pull request instead of as a flicker on somebody's machine six weeks later.
 
@@ -52,7 +52,7 @@ Alongside the renderer work the editor got a real pass:
 - User themes, with your preferences persisted between sessions.
 - A hierarchy tree with drag-to-reparent, search, row banding, and per-row delete.
 
-Note that this is a barebones version of the editor and a better looking one will come down then line.
+Note that this is a barebones version of the editor and a better-looking one will come down the line.
 
 ## Scenes and data
 
@@ -62,6 +62,6 @@ There's a new `orrin-registry` crate handling reflection, the component registry
 
 ## What's next
 
-I think that the renderer is in a satisfactory state aside from optimizations. I want to take a break from this side of the engine and move on to more engine side features getting this whole game engine usuable. I will return to the renderer near the end of the year. And I will also do some minor features in the meantime also.
+I think that the renderer is in a satisfactory state aside from optimizations. I want to take a break from this side of the engine and move on to more engine-side features, getting this whole game engine usable. I will return to the renderer near the end of the year. And I will also do some minor features in the meantime.
 
 If you want to look at the code it's all in the repo, and PR #65 has the full breakdown. Suggestions and bug reports are welcome on the Discord or as GitHub issues - I'm active on both.

@@ -1,14 +1,19 @@
 ---
 import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
+import Backdrop from "../components/Backdrop.astro";
+import { site } from "../data/site";
 import "../styles/global.css";
 
 interface Props {
+  /** Page title. The site name is appended unless this IS the site name. */
   title: string;
-  description: string;
+  description?: string;
 }
-const { title, description } = Astro.props;
+
+const { title, description = site.description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const fullTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
 ---
 
 <!doctype html>
@@ -19,29 +24,35 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <title>{title}</title>
+    <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.png" type="image/png" />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#02181b" />
+    <!-- Matches --paper, so the browser chrome on mobile blends into the page. -->
+    <meta name="theme-color" content="#0f1013" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={new URL("/brand/orrin-banner.png", Astro.site)} />
+    <meta
+      property="og:image"
+      content={new URL("/brand/orrin-banner.png", Astro.site)}
+    />
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@350;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;480;560;620&family=JetBrains+Mono:wght@400;500&display=swap"
     />
   </head>
 
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+    <Backdrop />
     <Nav />
     <main id="main">
       <slot />

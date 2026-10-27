@@ -1,32 +1,37 @@
 ---
-// Ft5 · Statement — one closing line, meta beneath. The sentence pairs with
-// the page's argument: an engine you can cut down to the game you're making.
+/**
+ * The meta row: wordmark, links, licence. Links come from src/data/site.ts.
+ */
+import { site, footer } from "../data/site";
+
 const year = new Date().getFullYear();
 ---
 
 <footer class="foot">
-  <p class="foot__line">Take the engine apart. Keep the half you need.</p>
+  <div class="foot__inner">
+    <div class="foot__meta">
+      <a class="foot__brand" href="/">
+        <img src="/brand/orrin-icon.png" alt="" width="22" height="22" />
+        {site.name}
+      </a>
 
-  <div class="foot__meta">
-    <a class="foot__brand" href="/">
-      <img src="/brand/orrin-icon.png" alt="" width="22" height="22" />
-      Orrin
-    </a>
+      <div class="foot__links">
+        {
+          footer.links.map((l) => (
+            <a
+              class="foot__link"
+              href={l.href}
+              rel={l.href.startsWith("http") ? "noopener" : undefined}
+            >
+              {l.label}
+            </a>
+          ))
+        }
+      </div>
 
-    <div class="foot__links">
-      <a class="foot__link" href="/docs/getting-started/">Docs</a>
-      <a class="foot__link" href="/roadmap/">Roadmap</a>
-      <a class="foot__link" href="/blog/">Blog</a>
-      <a
-        class="foot__link"
-        href="https://github.com/Orrin-Team/orrin"
-        rel="noopener">GitHub</a
-      >
-      <a class="foot__link" href="https://discord.gg/sY8YBGFmRy" rel="noopener"
-        >Discord</a
-      >
+      <span class="foot__legal">
+        © {year} {site.name} Team · {site.licence}
+      </span>
     </div>
-
-    <span class="foot__link muted">© {year} Orrin Team · GPL-2.0</span>
   </div>
 </footer>

@@ -1,49 +1,31 @@
 ---
 title: Getting started
-description: Build Orrin from source, run the built-in demo, and scaffold your first project with the CLI.
+description: Understand how to get set up with Orrin.
 order: 1
 ---
 
-Orrin builds from source. There is no installer and no published binary release
-yet — the engine is pre-release, and the way you run it today is the way the
-team runs it.
+As there is no release for Orrin, you need to clone or fork the repo and build it yourself.
 
 ## Prerequisites
 
-- **Rust** — a recent stable toolchain, installed via [rustup](https://rustup.rs).
-- **A Vulkan-capable GPU and driver.** The renderer targets Vulkan through
+- **Rust** - Orrin is written in Rust; you need to install it via [rustup](https://rustup.rs).
+- **A Vulkan-capable GPU and driver.** Orrin's renderer runs on Vulkan via
   [vulkano](https://github.com/vulkano-rs/vulkano).
-- **The .NET SDK** — only if you want C# scripting. The engine runs without it.
+- **The .NET SDK** - you need .NET if you want to script on this engine. Get it here: [.NET](https://dotnet.microsoft.com/en-us/download).
 
 ## Clone and run the demo
 
 ```bash
 git clone https://github.com/Orrin-Team/orrin.git
 cd orrin
-cargo run -p orrin-core
+cargo run -p orrin-core --release
 ```
 
-That builds the workspace and starts the engine on its built-in demo scene. The
-first build compiles the whole dependency tree, so expect it to take a while;
-subsequent runs are incremental.
-
-## Run with C# scripting
-
-Scripting is behind a Cargo feature. Build the C# side first, then enable the
-feature:
-
-```bash
-dotnet build scripting/Orrin -c Debug
-cargo run -p orrin-core --features scripting
-```
-
-The C# runtime is hosted in-process through CoreCLR, which is what makes it
-possible to reload game code without restarting the editor.
+This clones and builds Orrin. I highly recommend running Orrin with `--release` or else you will get poor performance. Building this project will take a couple of minutes for its first time.
 
 ## Start a game project
 
-You don't need to know any of the above to make a game. The `orrin` CLI
-scaffolds and runs projects for you:
+If you want to build a new Orrin project you need to use the Orrin CLI:
 
 ```bash
 cargo build -p orrin-cli
@@ -59,14 +41,11 @@ your project.
 
 ## Where to go next
 
-- [The CLI](/docs/cli/) — what `new` and `run` actually do.
-- [Scripting](/docs/scripting/) — the C# side and hot reload.
-- [Architecture](/docs/architecture/) — the long-term plan and why the early
-  decisions look the way they do.
+- [The CLI](/docs/cli/) - get to know the CLI better.
+- [C# API reference](/docs/api-reference/) - explore the C# API.
 
 ## If something breaks
 
 Orrin is in active development and the surface changes. The
 [Discord](https://discord.gg/sY8YBGFmRy) is the fastest way to get an answer,
-and [the issue tracker](https://github.com/Orrin-Team/orrin/issues) shows what's
-already known.
+or [GitHub issues](https://github.com/Orrin-Team/orrin/issues) is another way to report bugs.

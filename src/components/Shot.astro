@@ -1,27 +1,34 @@
 ---
-// A screenshot slot.
-//
-// With no `src`, it renders a soft-edged placeholder carrying the shot's name
-// and target dimensions — never a stock photo, because no stock image can
-// stand in for a screenshot of your engine. Drop a file into `public/shots/`
-// and set `src` and the real capture takes over; nothing else changes.
-//
-// Deliberately no browser chrome, no device frame, no tilt, no border — the
-// reader already has a window, and drawing them a fake one is a tell.
+/**
+ * A screenshot in a glass frame.
+ *
+ * With no `src` it renders a labelled placeholder at the right aspect ratio,
+ * rather than a broken image — so a shot you haven't captured yet doesn't
+ * shift the layout when you drop it in.
+ *
+ * Nothing frames the image. The captures are window grabs with transparent
+ * corners and their own drop shadow baked in, so a panel behind one would
+ * show as a second, differently-rounded rectangle around it.
+ *
+ * No added browser chrome, no device frame, no tilt either: the reader
+ * already has a window, and drawing them a fake one is a tell.
+ */
 interface Props {
-  /** e.g. "/shots/editor.png". Omit to render the placeholder. */
+  /** e.g. "/shots/Editor.webp". Omit to render the placeholder. */
   src?: string;
-  /** Describes the INTENDED subject, so it stays correct after you swap. */
+  /** Describes the intended subject, so it stays correct after you swap. */
   alt: string;
-  /** Names the shot. Shown in the placeholder, or under a real image. */
-  caption: string;
-  /** Target width in px — drives the aspect ratio and the placeholder hint. */
+  /** Names the shot. Shown under a real image, or inside the placeholder.
+   *  Omit it on a real image and no caption is drawn. */
+  caption?: string;
+  /** The file's real pixel width — reserves the aspect ratio. */
   w: number;
-  /** Target height in px. */
+  /** The file's real pixel height. */
   h: number;
-  /** Set on an above-the-fold shot. Skips lazy-loading, raises priority. */
+  /** Set on an above-the-fold shot: skips lazy-loading, raises priority. */
   priority?: boolean;
 }
+
 const { src, alt, caption, w, h, priority = false } = Astro.props;
 ---
 
@@ -40,15 +47,13 @@ const { src, alt, caption, w, h, priority = false } = Astro.props;
         style={`aspect-ratio: ${w} / ${h}`}
       />
     ) : (
-      /* TODO: Replace with a real screenshot — the caption names the shot,
-         and public/shots/README.md lists the target sizes. */
       <div
         class="shot__slot"
         style={`aspect-ratio: ${w} / ${h}`}
         role="img"
         aria-label={`Screenshot placeholder — ${alt}`}
       >
-        <div class="shot__slot-inner" aria-hidden="true">
+        <div aria-hidden="true">
           <p class="shot__slot-name">{caption}</p>
           <p class="shot__slot-hint">
             {w} × {h} · screenshot needed
@@ -57,5 +62,5 @@ const { src, alt, caption, w, h, priority = false } = Astro.props;
       </div>
     )
   }
-  {src && <figcaption class="shot__cap">{caption}</figcaption>}
+  {src && caption && <figcaption class="shot__cap">{caption}</figcaption>}
 </figure>

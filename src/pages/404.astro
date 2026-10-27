@@ -1,9 +1,34 @@
 ---
 import Base from "../layouts/Base.astro";
+import { site } from "../data/site";
+
+/** Everything there is. Edit this list, not the markup below. */
+const destinations = [
+  {
+    href: "/docs/getting-started/",
+    title: "Documentation",
+    note: "Build from source, run the demo, scaffold a project, write C#.",
+  },
+  {
+    href: "/roadmap/",
+    title: "Roadmap",
+    note: "Nine phases — what has shipped and what is still open.",
+  },
+  {
+    href: "/blog/",
+    title: "Blog Posts",
+    note: "Progress reports, findings and stories from building the engine.",
+  },
+  {
+    href: site.repo,
+    title: "The repository",
+    note: "Source, issue tracker and milestones.",
+  },
+];
 ---
 
 <Base
-  title="Page not found — Orrin Engine"
+  title="Page not found"
   description="That page doesn't exist. The engine is pre-release and pages move; here's where to go instead."
 >
   <div class="shell shell--narrow">
@@ -16,37 +41,28 @@ import Base from "../layouts/Base.astro";
     </header>
 
     <nav class="posts" aria-label="Site">
-      <article class="post-row">
-        <span class="post-row__date mono">01</span>
-        <a href="/docs/getting-started/">
-          <h2>Documentation</h2>
-          <p>Build from source, run the demo, scaffold a project, write C#.</p>
-        </a>
-      </article>
-      <article class="post-row">
-        <span class="post-row__date mono">02</span>
-        <a href="/roadmap/">
-          <h2>Roadmap</h2>
-          <p>Nine phases — what has shipped and what is still open.</p>
-        </a>
-      </article>
-      <article class="post-row">
-        <span class="post-row__date mono">03</span>
-        <a href="/blog/">
-          <h2>Development notes</h2>
-          <p>Progress on the engine, and the reasoning behind the decisions.</p>
-        </a>
-      </article>
-      <article class="post-row">
-        <span class="post-row__date mono">04</span>
-        <a href="https://github.com/Orrin-Team/orrin" rel="noopener">
-          <h2>The repository</h2>
-          <p>Source, issue tracker and milestones.</p>
-        </a>
-      </article>
+      {
+        destinations.map((d, i) => (
+          <article class="post-row pane pane--hover">
+            <a
+              class="post-row__link"
+              href={d.href}
+              rel={d.href.startsWith("http") ? "noopener" : undefined}
+            >
+              <span class="post-row__date">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div class="post-row__text">
+                <h2>{d.title}</h2>
+                <p>{d.note}</p>
+              </div>
+            </a>
+          </article>
+        ))
+      }
     </nav>
 
-    <section class="closer">
+    <section class="closer pane pane--soft">
       <a class="btn btn--accent" href="/">Back to the start</a>
     </section>
   </div>

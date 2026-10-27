@@ -1,255 +1,88 @@
 ---
+/**
+ * The roadmap: one line running down the page, with a milestone on it at each
+ * date. Content lives in src/data/roadmap.ts.
+ *
+ * The expanders are native <details>, so they work with no JavaScript, they're
+ * keyboard-operable for free, and the browser's own find-in-page can open one
+ * to reveal a match inside it.
+ */
 import Base from "../layouts/Base.astro";
-
-// Phases 1–5 mirror the GitHub milestones on Orrin-Team/orrin, with issue
-// numbers and open/closed state read from the tracker. Phases 6–9 come from
-// §7 "Sequencing" in docs/architecture.md. Counts snapshotted on the date
-// below — the tracker is the live source.
-const SNAPSHOT = "5 August 2026";
-const REPO = "https://github.com/Orrin-Team/orrin";
-
-type Item = { n: number; title: string; done: boolean };
-type Phase = {
-  id: string;
-  title: string;
-  when?: string;
-  summary: string;
-  items?: Item[];
-  notes?: string[];
-};
-
-const phases: Phase[] = [
-  {
-    id: "Phase 1",
-    title: "Scripting foundation",
-    summary:
-      "The C# side of the engine: lifecycle, math, time, queries, and the error isolation that keeps a bad script from taking the editor down.",
-    items: [
-      { n: 4, title: "Improved scripting integration", done: true },
-      { n: 9, title: "C# core math library", done: true },
-      { n: 10, title: "Time API", done: true },
-      { n: 11, title: "Extended script lifecycle", done: true },
-      { n: 12, title: "Entity querying from C#", done: true },
-      { n: 13, title: "Custom collision system", done: true },
-      { n: 14, title: "Script error isolation", done: true },
-      { n: 15, title: "Debug utilities", done: true },
-    ],
-  },
-  {
-    id: "Phase 2",
-    title: "External projects and hot reload",
-    summary:
-      "Turning the engine into something you can point at your own project: external game assemblies, hot reload, project structure and CLI tooling.",
-    items: [
-      { n: 5, title: "Hot reloading and external game assemblies", done: true },
-      { n: 16, title: "Game project structure", done: true },
-      { n: 17, title: "CLI and project tooling", done: true },
-      { n: 18, title: "Build watcher", done: true },
-      { n: 19, title: "Prefab system", done: false },
-      { n: 20, title: "Input mapping / action system", done: false },
-      { n: 21, title: "Structured logging", done: false },
-      { n: 39, title: "Component registry", done: false },
-    ],
-  },
-  {
-    id: "Phase 3",
-    title: "Editor usability and asset pipeline",
-    summary:
-      "The editor becomes the primary authoring tool: script attachment, play/stop mode, scene persistence, and a proper UUID-based asset pipeline.",
-    items: [
-      { n: 6, title: "Editor integration and scene persistence", done: false },
-      { n: 22, title: "Asset pipeline", done: false },
-      { n: 40, title: "Mutation pipeline with undo/redo", done: false },
-      { n: 41, title: "Scene format specification", done: false },
-      { n: 60, title: "Scene gizmos and editor top bar", done: false },
-    ],
-  },
-  {
-    id: "Phase 4",
-    title: "Visual and gameplay foundations",
-    summary:
-      "Shadows, parent/child hierarchy, multiple lights, in-game UI and audio — everything a real game scene needs.",
-    items: [
-      { n: 53, title: "Frame profiler: CPU phases and GPU passes", done: true },
-      { n: 54, title: "Renderer prerequisites for shadows", done: true },
-      { n: 7, title: "Visual additions", done: false },
-      { n: 23, title: "Point and spot lights", done: false },
-      { n: 24, title: "In-game UI", done: false },
-      { n: 25, title: "Basic audio", done: false },
-      { n: 58, title: "Platform optimisations for NVIDIA and RDNA", done: false },
-    ],
-  },
-  {
-    id: "Phase 5",
-    title: "Shippability",
-    summary:
-      "Closing the gap between tech demo and shippable product: materials, multi-scene, export packaging, a demo game and documentation. Contributions open after this phase.",
-    items: [
-      { n: 8, title: "Engine optimisations", done: true },
-      { n: 26, title: "Material system", done: false },
-      { n: 27, title: "Multiple scene support", done: false },
-      { n: 28, title: "Fullscreen and resolution config", done: false },
-      { n: 29, title: "Export and game packaging", done: false },
-      { n: 30, title: "Demo game", done: false },
-      { n: 31, title: "C# API docs and contributor guide", done: false },
-      { n: 59, title: "Engine modularity: fit-to-purpose features", done: false },
-    ],
-  },
-  {
-    id: "Phase 6",
-    title: "A lot more engine features.",
-    when: "First half of 2027",
-    summary:
-      "Orrin at this stage is missing a lot of features that are required for games to be made. This phase is trying to tackle this.",
-    notes: [
-      "Render graph inspector and one-file frame capture",
-      "Shader graph and scripting editing.",
-      "MCP tooling.",
-      "Asset hot reloading.",
-      "Skeletal animation, designed into the ECS before more systems assume static meshes",
-      "A physics decision, realistically integrating Rapier rather than growing the Phase 1 collision system",
-    ],
-  },
-  {
-    id: "Phase 7",
-    title: "Packages, plugins and assets",
-    when: "Through 2027",
-    summary:
-      "Cargo's model applied to game content: a package manager over content-addressed assets, self-hostable registries, and a shared import cache. Scheduled before collaboration because it exercises the same server infrastructure at lower protocol risk.",
-  },
-  {
-    id: "Phase 8",
-    title: "Real-time collaboration",
-    when: "2027 into 2028",
-    summary:
-      "The CRDT scene document behind the existing mutation pipeline, the self-hosted server, presence and asset locks — then hosted convenience once self-hosting is stable.",
-  },
-  {
-    id: "Phase 9",
-    title: "Real-time path tracing",
-    when: "Onward",
-    summary:
-      "An alternative render graph over the same scene and materials, benchmarked against the reference tracer that will have been validating the renderer for two years by then.",
-  },
-];
-
-const state = (p: Phase) => {
-  if (!p.items) return "planned";
-  const done = p.items.filter((i) => i.done).length;
-  if (done === p.items.length) return "complete";
-  return done > 0 ? "in progress" : "open";
-};
+import { site } from "../data/site";
+import { inline } from "../lib/inline";
+import { milestones, tail, roadmapPage } from "../data/roadmap";
 ---
 
 <Base
-  title="Roadmap — Orrin Engine"
-  description="Nine phases: what has shipped, what is open on the tracker today, and what the architecture plan schedules through 2028."
+  title={roadmapPage.title}
+  description="Where Orrin is going: the demo, the pre-release and 1.0, and the dates each is aimed at."
 >
-  <div class="shell">
+  <div class="shell shell--narrow">
     <header class="page-head">
-      <h1>Roadmap</h1>
-      <p>
-        Phases 1–5 are the showcase roadmap and map one-to-one onto the GitHub
-        milestones. Phases 6–9 come from the sequencing section of the
-        architecture plan, on a horizon of roughly a decade.
-      </p>
-      <p class="mono muted">
-        Issue state snapshotted {SNAPSHOT} · <a
-          class="tlink"
-          href={`${REPO}/milestones`}
-          rel="noopener">live milestones <span aria-hidden="true">↗</span></a
-        >
-      </p>
+      <h1>{roadmapPage.title}</h1>
+      <p>{roadmapPage.lede}</p>
     </header>
 
-    <ol class="timeline">
+    <ol class="track">
       {
-        phases.map((p) => {
-          const s = state(p);
-          return (
-            <li
-              class:list={[
-                "phase",
-                s === "in progress" && "phase--now",
-                s === "complete" && "phase--complete",
-              ]}
-            >
-              <div>
-                <p class="phase__id">
-                  {p.id}
-                  <span class:list={["tag", s === "complete" && "tag--live"]}>{s}</span>
-                </p>
-                <h2>{p.title}</h2>
-                {p.when && <p class="phase__when">{p.when}</p>}
-                {p.items && (
-                  <p class="phase__when tnum">
-                    {p.items.filter((i) => i.done).length} of {p.items.length} issues closed
-                  </p>
-                )}
-              </div>
+        milestones.map((m) => (
+          <li class="track__row">
+            <details class="ms">
+              <summary class="ms__head">
+                <span class="ms__dot" aria-hidden="true" />
+                <span class="ms__title">{m.title}</span>
+                <span class="ms__when mono">{m.when}</span>
+                <svg
+                  class="ms__chev"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M3.5 5.5 7 9l3.5-3.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                {m.summary && <span class="ms__sum">{m.summary}</span>}
+              </summary>
 
-              <div class="phase__body">
-                <p>{p.summary}</p>
-
-                {p.items && (
-                  <ul class="phase__items">
-                    {p.items.map((i) => (
-                      <li>
-                        <span class:list={["state", i.done && "state--done"]}>
-                          {i.done ? "done" : "—"}
-                        </span>
-                        <a
-                          class:list={[i.done && "done"]}
-                          href={`${REPO}/issues/${i.n}`}
-                          rel="noopener"
-                        >
-                          {i.title}
-                          <span class="mono muted"> #{i.n}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {p.notes && (
-                  <ul class="phase__items">
-                    {p.notes.map((n) => (
-                      <li>
-                        <span class="state">—</span>
-                        <span>{n}</span>
-                      </li>
+              <div class="ms__body">
+                {m.details?.map((d) => <p set:html={inline(d)} />)}
+                {m.points && (
+                  <ul class="ms__points">
+                    {m.points.map((pt) => (
+                      <li set:html={inline(pt)} />
                     ))}
                   </ul>
                 )}
               </div>
-            </li>
-          );
-        })
+            </details>
+          </li>
+        ))
       }
+
+      <li class="track__row track__row--tail">
+        <span class="ms__dot ms__dot--open" aria-hidden="true"></span>
+        <span class="track__tail">{tail}</span>
+      </li>
     </ol>
 
-    <section class="closer">
-      <h2>Contributions open after Phase 5</h2>
-      <p>
-        The project is deliberately closed to contributions until then — the
-        stated reason is that it's early enough that the direction could get
-        misread. Until it opens, discussion happens on Discord.
-      </p>
-      <a class="btn btn--ghost" href="https://discord.gg/sY8YBGFmRy" rel="noopener"
-        >Join the Discord</a
-      >
+    <section class="closer pane pane--soft">
+      <h2>{roadmapPage.closer.heading}</h2>
+      <p>{roadmapPage.closer.body}</p>
+      {
+        roadmapPage.closer.action && (
+          <a class="btn btn--glass" href={site.discord} rel="noopener">
+            {roadmapPage.closer.action.label}
+          </a>
+        )
+      }
     </section>
   </div>
 </Base>
-
-<style>
-  .phase__items a {
-    transition: color var(--dur-short) var(--ease-out);
-  }
-  .phase__items a:hover {
-    color: var(--color-accent);
-  }
-  .phase__id .tag {
-    font-size: var(--text-xs);
-  }
-</style>

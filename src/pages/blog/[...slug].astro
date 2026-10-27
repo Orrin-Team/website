@@ -18,10 +18,7 @@ const fmt = new Intl.DateTimeFormat("en-GB", {
 }).format(entry.data.date);
 ---
 
-<Base
-  title={`${entry.data.title} — Orrin Engine`}
-  description={entry.data.description}
->
+<Base title={entry.data.title} description={entry.data.description}>
   <div class="shell shell--narrow">
     <header class="page-head">
       <h1>{entry.data.title}</h1>
@@ -38,7 +35,7 @@ const fmt = new Intl.DateTimeFormat("en-GB", {
           src={entry.data.cover}
           alt={entry.data.coverAlt!}
           widths={[640, 960, 1280, 1920]}
-          sizes="(min-width: 64rem) 944px, 100vw"
+          sizes="(min-width: 64rem) 912px, 100vw"
           loading="eager"
           fetchpriority="high"
         />
@@ -49,16 +46,10 @@ const fmt = new Intl.DateTimeFormat("en-GB", {
       <Content />
     </article>
 
-    <nav class="closer" aria-label="Blog">
-      <a class="tlink" href="/blog/"
-        ><span aria-hidden="true">←</span> All development notes</a
-      >
+    <nav class="closer pane pane--soft" aria-label="Blog">
+      <a class="tlink" href="/blog/">
+        <span aria-hidden="true">←</span> All development notes
+      </a>
     </nav>
   </div>
 </Base>
-
-<style>
-  .post-body {
-    padding-block: var(--space-2xl);
-  }
-</style>

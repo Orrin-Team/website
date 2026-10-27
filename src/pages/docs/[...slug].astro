@@ -15,10 +15,7 @@ const { entry, sorted, prev, next } = Astro.props;
 const { Content } = await render(entry);
 ---
 
-<Base
-  title={`${entry.data.title} — Orrin docs`}
-  description={entry.data.description}
->
+<Base title={`${entry.data.title} — Orrin docs`} description={entry.data.description}>
   <div class="shell">
     <header class="page-head">
       <h1>{entry.data.title}</h1>
@@ -26,7 +23,7 @@ const { Content } = await render(entry);
     </header>
 
     <div class="docs">
-      <aside class="docs__rail">
+      <aside class="docs__rail pane pane--quiet">
         <p class="docs__rail-title">Documentation</p>
         <nav aria-label="Documentation">
           {
@@ -46,19 +43,22 @@ const { Content } = await render(entry);
         <Content />
 
         <nav class="docs__foot" aria-label="Documentation pages">
-          {prev && <a class="tlink" href={`/docs/${prev.id}/`}><span aria-hidden="true">←</span> {prev.data.title}</a>}
-          {next && <a class="tlink" href={`/docs/${next.id}/`}>{next.data.title} <span aria-hidden="true">→</span></a>}
+          {
+            prev && (
+              <a class="tlink" href={`/docs/${prev.id}/`}>
+                <span aria-hidden="true">←</span> {prev.data.title}
+              </a>
+            )
+          }
+          {
+            next && (
+              <a class="tlink" href={`/docs/${next.id}/`}>
+                {next.data.title} <span aria-hidden="true">→</span>
+              </a>
+            )
+          }
         </nav>
       </article>
     </div>
   </div>
 </Base>
-
-<style>
-  .docs__foot {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-lg);
-    justify-content: space-between;
-  }
-</style>
