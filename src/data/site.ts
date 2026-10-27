@@ -11,12 +11,21 @@ export const site = {
   /** Shown in the nav, the footer, and appended to every page title. */
   name: "Orrin",
 
-  /** The one-line description search engines and link previews use. */
+  /** A one-liner for prose. Deliberately NOT in the <title> — a link preview
+   *  truncates anything past about 60 characters, which ate the old one. */
   tagline: "An open-source 3D game engine you can cut down to the game you're making.",
 
-  /** Fallback <meta description> for any page that doesn't set its own. */
+  /**
+   * The home page's <meta description>, and the fallback for any page that
+   * doesn't set its own. This is the paragraph people see in a link preview
+   * on Discord, Slack or a search result, so keep it to a few sentences —
+   * most clients cut it off around 300 characters.
+   *
+   * The hero on the landing page renders this same string, so the page and
+   * the preview can't say different things.
+   */
   description:
-    "Orrin is an open-source 3D game engine written in Rust with C# scripting hosted in-process. Change code and see the result in under two seconds, and build with only the subsystems your game needs.",
+    "Orrin is a new, open-source game engine for 3D games (2D planned for the future) for all kinds of fidelity. Orrin is built to allow you to purpose the game engine to your specific needs, and to be fast when editing, coding or publishing.",
 
   repo: "https://github.com/Orrin-Team/orrin",
   discord: "https://discord.gg/sY8YBGFmRy",

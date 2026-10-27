@@ -63,7 +63,9 @@ export const hero = {
    *  accent colour — delete the asterisks to drop the tint. */
   title: "A fast, *fit to purpose* engine.",
 
-  lede: "Orrin is a new, open-source game engine for 3D games (2D planned for the future) for all kinds of fidelity. Orrin is built to allow you to purpose the game engine to your specific needs, and to be fast when editing, coding or publishing.",
+  /** The same sentence as `site.description`, so the page and the link
+   *  preview can't drift apart. Edit it in site.ts. */
+  lede: site.description,
 
   actions: [
     { href: "/docs/getting-started/", label: "Get started", primary: true },
