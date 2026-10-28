@@ -1360,8 +1360,54 @@ svg {
 
 .docs {
   display: grid;
-  gap: var(--space-xl);
+  /* A grid item defaults to `min-width: auto`, so one long unbreakable line
+     — a clone URL inside a <pre>, say — widens the column past the viewport.
+     With `overflow-x: clip` on html and body that doesn't even raise a
+     scrollbar; the text is simply cut off. minmax(0, …) lets the column
+     shrink so the <pre> scrolls on its own instead. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-lg);
   padding-block-end: var(--space-2xl);
+}
+
+/* ---- The rail -----------------------------------------------------------
+   On a phone it is a scrolling row of pills, not a tall list: a full index
+   sitting between the heading and the first paragraph is ~190px of
+   navigation you have already used to get here. It becomes the vertical
+   rail once there is a column to put it in. */
+
+.docs__rail {
+  padding: var(--space-xs);
+}
+
+.docs__rail-title {
+  display: none;
+}
+
+.docs__rail nav {
+  display: flex;
+  gap: var(--space-2xs);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* The pills running to the edge are the affordance; a scrollbar inside a
+     glass pane reads as a seam across it. */
+  scrollbar-width: none;
+}
+
+.docs__rail nav::-webkit-scrollbar {
+  display: none;
+}
+
+.docs__rail a {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--ink-3);
+  white-space: nowrap;
+  flex: none;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
 }
 
 @media (min-width: 62rem) {
@@ -1375,35 +1421,28 @@ svg {
   .docs__rail {
     position: sticky;
     inset-block-start: calc(var(--nav-h) + var(--space-lg));
+    padding: var(--space-md);
   }
-}
 
-.docs__rail {
-  padding: var(--space-md);
-}
+  .docs__rail-title {
+    display: block;
+    padding: var(--space-2xs) var(--space-sm) var(--space-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+  }
 
-.docs__rail-title {
-  padding: var(--space-2xs) var(--space-sm) var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-4);
-}
+  .docs__rail nav {
+    display: grid;
+    gap: var(--space-3xs);
+    overflow: visible;
+  }
 
-.docs__rail nav {
-  display: grid;
-  gap: var(--space-3xs);
-}
-
-.docs__rail a {
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  color: var(--ink-3);
-  transition:
-    color var(--dur-short) var(--ease-out),
-    background-color var(--dur-short) var(--ease-out);
+  .docs__rail a {
+    white-space: normal;
+  }
 }
 .docs__rail a:hover {
   color: var(--ink);
